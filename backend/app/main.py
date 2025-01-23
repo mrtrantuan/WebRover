@@ -127,7 +127,10 @@ async def stream_agent_response(query: str, page):
         retry_count = 0
         max_retries = 3
         
-        async for event in main_agent_graph.astream(initial_state):
+        async for event in main_agent_graph.astream(
+            initial_state,
+             {"recursion_limit": 400}
+            ):
             try:
                 # Send periodic keepalive to prevent timeout
                 yield f"data: {{\n  \"type\": \"keepalive\",\n  \"timestamp\": {time.time()}\n}}\n\n"

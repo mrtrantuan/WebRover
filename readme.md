@@ -26,7 +26,7 @@ In today's digital landscape, users spend significant time performing repetitive
 
 ## Architecture
 
-![Agent Architecture Diagram](agent_diagram.png)
+![Agent Architecture Diagram](/assets/agent_diagram.png)
 
 WebRover uses a state-based architecture powered by LangGraph to manage the flow of operations:
 

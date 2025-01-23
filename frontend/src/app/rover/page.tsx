@@ -65,23 +65,31 @@ export default function RoverPage() {
               const jsonStr = line.slice(6).trim();
               const data = JSON.parse(jsonStr);
 
-              // Format action content if it's an action message
+              // Skip keepalive messages
+              if (data.type === 'keepalive') continue;
+
+              // Handle action messages
               if (data.type === 'action' && typeof data.content === 'object') {
                 const { action, args } = data.content;
                 data.content = `${action}${args ? ` → ${args}` : ''}`;
               }
 
-              // Validate the message format after potential transformation
-              if (typeof data.type !== 'string' || typeof data.content !== 'string') {
-                console.error('Invalid message format:', data);
+              // Validate message structure
+              if (!data || typeof data.type !== 'string') {
+                console.error('Invalid message structure:', data);
                 continue;
               }
 
-              // Only add messages with valid types
-              if (['thought', 'action', 'final_answer'].includes(data.type)) {
+              // Ensure content is always a string
+              if (typeof data.content === 'object') {
+                data.content = JSON.stringify(data.content);
+              }
+
+              // Only add valid message types
+              if (['thought', 'action', 'final_answer', 'error'].includes(data.type)) {
                 setMessages(prev => [...prev, {
                   type: data.type,
-                  content: data.content
+                  content: String(data.content)
                 }]);
               }
             } catch (e) {
@@ -128,7 +136,7 @@ export default function RoverPage() {
       </header>
 
       {/* Input Bar */}
-      <div className="fixed top-20 left-[62%] transform -translate-x-1/2 z-40 w-[1000px]">
+      <div className="fixed top-20 left-[70%] transform -translate-x-1/2 z-40 w-full max-w-[500px] px-4 sm:px-6 md:px-8">
         <QueryInput
           value={query}
           onChange={setQuery}

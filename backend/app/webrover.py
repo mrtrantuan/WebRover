@@ -193,7 +193,8 @@ async def setup_browser_2(go_to_page: str):
     
     # Add browser context options
     context_options = {
-        "viewport": {"width": 1280, "height": 720},  # Standard desktop resolution
+        "viewport": {"width": 1076, "height": 1076},  # Standard desktop resolution
+        #"viewport": {"width": 1280, "height": 720},
         "user_agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
         "permissions": ['geolocation'],
         "geolocation": {"latitude": 37.7749, "longitude": -122.4194},  # Set a fixed location
