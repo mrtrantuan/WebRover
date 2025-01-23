@@ -31,11 +31,11 @@ export function SpotlightCard({
       onMouseLeave={() => setOpacity(0)}
       className={`relative rounded-2xl border border-zinc-800 bg-zinc-900/50 
                  backdrop-blur-sm overflow-hidden transition-all duration-300
-                 hover:border-zinc-700 hover:bg-zinc-900/80 group ${className}`}
+                 hover:border-zinc-700 hover:bg-zinc-900/80 ${className}`}
     >
-      {/* Gradient background */}
-      <div className={`absolute inset-0 bg-gradient-to-r ${gradient} opacity-0 
-                      group-hover:opacity-100 transition-opacity duration-500`} />
+      {/* Gradient background - removed group-hover and made it always visible */}
+      <div className={`absolute inset-0 bg-gradient-to-r ${gradient} opacity-100 
+                      transition-opacity duration-500`} />
       
       {/* Spotlight effect */}
       <div

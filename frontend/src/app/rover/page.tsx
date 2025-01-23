@@ -95,43 +95,43 @@ export default function RoverPage() {
 
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-zinc-900 via-black to-black">
-      {/* Animated background */}
-      <ParticlesBackground/>
+      <ParticlesBackground className="absolute inset-0 z-0" />
       
-      {/* Ambient gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/5 via-purple-500/5 to-teal-500/5 animate-flow" />
-
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 p-4 backdrop-blur-xl bg-black/30 z-50
                         border-b border-zinc-800/50 shadow-lg shadow-black/20">
-        <div className="max-w-6xl mx-auto flex justify-between items-center">
+        <div className="flex justify-between items-center max-w-[1600px] mx-auto">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-teal-400 
                         text-transparent bg-clip-text animate-flow bg-[length:200%_auto]">
             WebRover
           </h1>
+
           <button
             onClick={handleDisconnect}
-            className="px-4 py-2 rounded-full 
+            className="px-4 py-2 rounded-full whitespace-nowrap
                      bg-gradient-to-r from-red-500/10 to-orange-500/10
                      border border-red-500/50 text-red-400
                      hover:bg-red-500/20 hover:border-red-500/70 hover:text-red-300
-                     transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]
-                     shadow-[0_2px_8px_rgba(239,68,68,0.25)]"
+                     transition-all duration-300"
           >
             Disconnect Browser
           </button>
         </div>
       </header>
 
+      {/* Input Bar */}
+      <div className="fixed top-20 left-[65%] transform -translate-x-1/2 z-40 w-[600px]">
+        <QueryInput
+          value={query}
+          onChange={setQuery}
+          onSubmit={handleSubmit}
+          isLoading={isLoading}
+        />
+      </div>
+
       {/* Main Content */}
-      <main className="relative max-w-4xl mx-auto pt-24 p-4 space-y-8 z-10">
-        <div className="space-y-8 backdrop-blur-sm">
-          <QueryInput
-            value={query}
-            onChange={setQuery}
-            onSubmit={handleSubmit}
-            isLoading={isLoading}
-          />
+      <main className="relative pt-36 z-10">
+        <div className="max-w-[1600px] mx-auto">
           <ResponseDisplay messages={messages} />
         </div>
       </main>

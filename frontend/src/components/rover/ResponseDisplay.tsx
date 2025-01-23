@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 import remarkGfm from 'remark-gfm';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface Message {
   type: 'thought' | 'action' | 'final_answer' | 'error';
@@ -14,51 +15,70 @@ interface ResponseDisplayProps {
 }
 
 export function ResponseDisplay({ messages }: ResponseDisplayProps) {
-  const getMessageStyles = (type: Message['type']) => {
-    switch (type) {
-      case 'thought':
-        return 'from-blue-500/20 to-purple-500/20';
-      case 'action':
-        return 'from-green-500/20 to-emerald-500/20';
-      case 'final_answer':
-        return 'from-purple-500/20 to-pink-500/20';
-      case 'error':
-        return 'from-red-500/20 to-orange-500/20';
-      default:
-        return 'from-zinc-500/20 to-zinc-600/20';
-    }
-  };
+  const thoughts = messages.filter(m => m.type === 'thought');
+  const actions = messages.filter(m => m.type === 'action');
+  const finalAnswer = messages.find(m => m.type === 'final_answer');
 
   return (
-    <div className="space-y-6">
-      {messages.map((message, index) => (
-        <SpotlightCard
-          key={index}
-          className="p-6"
-          gradient={getMessageStyles(message.type)}
-          spotlightColor={`rgba(${
-            message.type === 'thought' ? '147, 51, 234' :
-            message.type === 'action' ? '34, 197, 94' :
-            message.type === 'final_answer' ? '168, 85, 247' :
-            '239, 68, 68'}, 0.15)`}
-        >
-          <div className="space-y-4">
-            <span className={`
-              inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium
-              ${message.type === 'thought' ? 'bg-purple-500/10 text-purple-300 border border-purple-500/20' : ''}
-              ${message.type === 'action' ? 'bg-green-500/10 text-green-300 border border-green-500/20' : ''}
-              ${message.type === 'final_answer' ? 'bg-pink-500/10 text-pink-300 border border-pink-500/20' : ''}
-              ${message.type === 'error' ? 'bg-red-500/10 text-red-300 border border-red-500/20' : ''}
-            `}>
-              {message.type.replace('_', ' ').toUpperCase()}
-            </span>
-            
-            {message.type === 'final_answer' ? (
-              <div className="prose prose-invert max-w-none prose-headings:text-zinc-200 
-                            prose-p:text-zinc-300 prose-strong:text-zinc-200 
-                            prose-ul:text-zinc-300 prose-ol:text-zinc-300
-                            prose-pre:bg-transparent prose-pre:p-0
-                            prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg">
+    <div className="flex">
+      {/* Wider Sidebar with animations */}
+      <div className="w-96 fixed left-0 top-0 bottom-0 bg-black/30 backdrop-blur-md border-r border-zinc-800/50
+                    pt-24 pb-4 px-4 overflow-y-auto">
+        <div className="space-y-6">
+          {/* Thoughts Section */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-medium text-zinc-400 uppercase tracking-wider px-2">Thoughts</h3>
+            <AnimatePresence>
+              {thoughts.map((message, index) => (
+                <motion.div
+                  key={`thought-${index}`}
+                  initial={{ x: -100, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                  className="bg-zinc-900/30 rounded-lg p-3 border-l-4 border-l-purple-500
+                           border border-purple-500/20 shadow-lg"
+                >
+                  <p className="text-sm text-zinc-300 leading-relaxed">
+                    {message.content}
+                  </p>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+
+          {/* Actions Section */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-medium text-zinc-400 uppercase tracking-wider px-2">Actions</h3>
+            <AnimatePresence>
+              {actions.map((message, index) => (
+                <motion.div
+                  key={`action-${index}`}
+                  initial={{ x: -100, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                  className="bg-zinc-900/30 rounded-lg p-3 border-l-4 border-l-green-500
+                           border border-green-500/20 shadow-lg"
+                >
+                  <p className="text-sm text-zinc-300 leading-relaxed">
+                    {message.content}
+                  </p>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content - keeping the original formatting */}
+      <div className="flex-1 ml-96">
+        {finalAnswer && (
+          <div className="max-w-3xl mx-auto p-6">
+            <SpotlightCard 
+              className="p-6"
+              gradient="from-purple-500/20 to-pink-500/20"
+              spotlightColor="rgba(168, 85, 247, 0.15)"
+            >
+              <div className="prose prose-invert max-w-none">
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   components={{
@@ -80,31 +100,20 @@ export function ResponseDisplay({ messages }: ResponseDisplayProps) {
                         </code>
                       );
                     },
-                    h1: ({ children }) => <h1 className="text-2xl font-bold mb-4">{children}</h1>,
-                    h2: ({ children }) => <h2 className="text-xl font-semibold mb-3">{children}</h2>,
-                    h3: ({ children }) => <h3 className="text-lg font-medium mb-2">{children}</h3>,
+                    h1: ({ children }) => <h1 className="text-2xl font-bold mb-4 text-zinc-200">{children}</h1>,
+                    h2: ({ children }) => <h2 className="text-xl font-semibold mb-3 text-zinc-200">{children}</h2>,
                     p: ({ children }) => <p className="text-zinc-300 leading-relaxed mb-4">{children}</p>,
-                    ul: ({ children }) => <ul className="list-disc list-inside space-y-2 mb-4">{children}</ul>,
-                    ol: ({ children }) => <ol className="list-decimal list-inside space-y-2 mb-4">{children}</ol>,
-                    li: ({ children }) => <li className="text-zinc-300 ml-4">{children}</li>,
-                    blockquote: ({ children }) => (
-                      <blockquote className="border-l-4 border-zinc-700 pl-4 my-4 italic text-zinc-400">
-                        {children}
-                      </blockquote>
-                    ),
+                    ul: ({ children }) => <ul className="list-disc list-inside space-y-2 mb-4 text-zinc-300">{children}</ul>,
+                    ol: ({ children }) => <ol className="list-decimal list-inside space-y-2 mb-4 text-zinc-300">{children}</ol>,
                   }}
                 >
-                  {message.content}
+                  {finalAnswer.content}
                 </ReactMarkdown>
               </div>
-            ) : (
-              <div className="text-zinc-300 whitespace-pre-wrap leading-relaxed">
-                {message.content}
-              </div>
-            )}
+            </SpotlightCard>
           </div>
-        </SpotlightCard>
-      ))}
+        )}
+      </div>
     </div>
   );
 }
