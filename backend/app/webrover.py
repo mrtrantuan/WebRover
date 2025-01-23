@@ -42,6 +42,12 @@ llm_mini = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 llm_openai_o1 = ChatOpenAI(model="o1-preview", temperature=1)
 llm = llm_openai
 
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+mark_page_path = os.path.join(current_dir, "static", "mark_page.js")
+
+
+
 class Bbox(TypedDict):
     x: int
     y: int
@@ -72,7 +78,7 @@ class AgentState(TypedDict):
 
 
 
-with open("mark_page.js") as f:
+with open(mark_page_path) as f:
     mark_page_script = f.read()
 
 async def is_image_blank(image_bytes: bytes) -> bool:

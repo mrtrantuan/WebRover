@@ -6,7 +6,7 @@ from typing import Optional, Dict, Any
 from contextlib import asynccontextmanager
 import json
 # Import necessary functions from webrover.py
-from webrover import setup_browser_2, main_agent_graph
+from .webrover import setup_browser_2, main_agent_graph
 
 from fastapi.middleware.cors import CORSMiddleware
 
