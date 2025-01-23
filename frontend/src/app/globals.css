@@ -42,3 +42,32 @@ body {
     background-position: 0% 50%;
   }
 }
+
+@keyframes flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+.animate-flow {
+  animation: flow 2s linear infinite;
+  background-size: 200% auto;
+}
+
+@keyframes pulse-subtle {
+  0%, 100% {
+    border-color: rgba(59, 130, 246, 0.05);
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.05);
+  }
+  50% {
+    border-color: rgba(59, 130, 246, 0.15);
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.15);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
