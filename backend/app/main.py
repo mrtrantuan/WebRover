@@ -30,6 +30,9 @@ browser_session: Dict[str, Any] = {
     "page": None
 }
 
+# Global queue for browser events
+browser_events = asyncio.Queue()
+
 class BrowserSetupRequest(BaseModel):
     url: str = "https://www.google.com"
 
@@ -78,35 +81,91 @@ async def cleanup_browser():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to cleanup browser: {str(e)}")
 
-async def stream_agent_response(query: str, page):
-    # Initialize state
-    initial_state = {
-        "input": query,
-        "page": page,
-        "image": "",
-        "master_plan": None,
-        "bboxes": [],
-        "actions_taken": [],
-        "action": None,
-        "last_action": "",
-        "notes": [],
-        "answer": ""
-    }
+async def emit_browser_event(event_type: str, data: Dict[str, Any]):
+    await browser_events.put({
+        "type": event_type,
+        "data": data
+    })
+
+@app.get("/browser-events")
+async def browser_events_endpoint():
+    async def event_generator():
+        while True:
+            try:
+                event = await browser_events.get()
+                yield f"data: {json.dumps(event)}\n\n"
+            except asyncio.CancelledError:
+                break
     
-    # Stream the agent's steps
-    async for event in main_agent_graph.astream(initial_state):
-        if isinstance(event, dict):
-            # Convert any non-serializable objects to strings
-            if "parse_action" in event:
-                thought = event["parse_action"]["notes"][-1]
-                action = event["parse_action"]["action"]
-                yield f"data: {{\n  \"type\": \"thought\",\n  \"content\": {json.dumps(thought)}\n}}\n\n"
-                yield f"data: {{\n  \"type\": \"action\",\n  \"content\": {json.dumps(action)}\n}}\n\n"
-            
-            # Handle final answer
-            if "answer_node" in event:
-                answer = event["answer_node"]["answer"]
-                yield f"data: {{\n  \"type\": \"final_answer\",\n  \"content\": {json.dumps(answer)}\n}}\n\n"
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+        }
+    )
+
+async def stream_agent_response(query: str, page):
+    try:
+        # Emit initial loading state
+        await emit_browser_event("status", {"status": "loading"})
+        
+        initial_state = {
+            "input": query,
+            "page": page,
+            "image": "",
+            "master_plan": None,
+            "bboxes": [],
+            "actions_taken": [],
+            "action": None,
+            "last_action": "",
+            "notes": [],
+            "answer": ""
+        }
+        
+        async for event in main_agent_graph.astream(initial_state):
+            if isinstance(event, dict):
+                # Handle page actions
+                if "parse_action" in event:
+                    action = event["parse_action"]["action"]
+                    thought = event["parse_action"]["notes"][-1]
+                    
+                    # Emit thought
+                    yield f"data: {{\n  \"type\": \"thought\",\n  \"content\": {json.dumps(thought)}\n}}\n\n"
+                    
+                    # Handle different action types
+                    if isinstance(action, dict):
+                        action_type = action.get("action", "")
+                        
+                        # Emit browser status for navigation actions
+                        if action_type == "goto":
+                            await emit_browser_event("navigation", {
+                                "url": action["args"],
+                                "status": "loading"
+                            })
+                        elif action_type in ["click", "type", "scroll"]:
+                            await emit_browser_event("interaction", {
+                                "type": action_type,
+                                "args": action.get("args", "")
+                            })
+                    
+                    # Emit action for frontend
+                    yield f"data: {{\n  \"type\": \"action\",\n  \"content\": {json.dumps(action)}\n}}\n\n"
+                
+                # Handle final answer
+                if "answer_node" in event:
+                    answer = event["answer_node"]["answer"]
+                    yield f"data: {{\n  \"type\": \"final_answer\",\n  \"content\": {json.dumps(answer)}\n}}\n\n"
+                    
+                # Emit completion status
+                await emit_browser_event("status", {"status": "complete"})
+                
+    except Exception as e:
+        # Handle errors
+        error_message = str(e)
+        yield f"data: {{\n  \"type\": \"error\",\n  \"content\": {json.dumps(error_message)}\n}}\n\n"
+        await emit_browser_event("status", {"status": "error", "message": error_message})
 
 @app.post("/query")
 async def query_agent(request: QueryRequest):

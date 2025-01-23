@@ -120,7 +120,7 @@ export default function RoverPage() {
       </header>
 
       {/* Input Bar */}
-      <div className="fixed top-20 left-[65%] transform -translate-x-1/2 z-40 w-[600px]">
+      <div className="fixed top-20 left-[62%] transform -translate-x-1/2 z-40 w-[1000px]">
         <QueryInput
           value={query}
           onChange={setQuery}

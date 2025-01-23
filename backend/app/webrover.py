@@ -128,7 +128,7 @@ async def mark_page(page):
     for attempt in range (3):
         
         try: 
-            await page.wait_for_load_state("networkidle")
+            
             await page.wait_for_load_state("domcontentloaded")
             await page.evaluate(mark_page_script)
             bboxes = await page.evaluate("markPage()")
