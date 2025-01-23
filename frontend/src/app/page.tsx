@@ -45,17 +45,7 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
       <div className="max-w-2xl w-full space-y-8 text-center">
-        {/* Logo */}
-        <div className="relative w-24 h-24 mx-auto mb-8">
-          <Image
-            src="/rover-logo.png"
-            alt="WebRover Logo"
-            width={96}
-            height={96}
-            className="object-contain"
-            priority
-          />
-        </div>
+        
 
         {/* Title */}
         <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-400 to-teal-400 text-transparent bg-clip-text">
