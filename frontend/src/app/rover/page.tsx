@@ -2,11 +2,18 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ResponseDisplay } from '@/components/rover/ResponseDisplay';
+import { QueryInput } from '@/components/rover/QueryInput';
+
+interface Message {
+  type: 'thought' | 'action' | 'final_answer' | 'error';
+  content: string;
+}
 
 export default function RoverPage() {
   const router = useRouter();
   const [query, setQuery] = useState('');
-  const [messages, setMessages] = useState<Array<{type: string, content: string}>>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleDisconnect = async () => {
@@ -20,11 +27,12 @@ export default function RoverPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     if (!query.trim()) return;
     
     setIsLoading(true);
+    setMessages([]); // Clear previous messages
+    
     try {
       const response = await fetch('http://localhost:8000/query', {
         method: 'POST',
@@ -37,26 +45,55 @@ export default function RoverPage() {
       const reader = response.body?.getReader();
       if (!reader) return;
 
+      const decoder = new TextDecoder();
+      let buffer = '';
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
-        const text = new TextDecoder().decode(value);
-        const lines = text.split('\n');
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n\n');
+        
+        buffer = lines.pop() || '';
 
-        lines.forEach(line => {
-          if (line.startsWith('data: ')) {
+        for (const line of lines) {
+          if (line.trim() && line.startsWith('data: ')) {
             try {
-              const data = JSON.parse(line.slice(6));
-              setMessages(prev => [...prev, data]);
+              const jsonStr = line.slice(6).trim();
+              const data = JSON.parse(jsonStr);
+
+              // Format action content if it's an action message
+              if (data.type === 'action' && typeof data.content === 'object') {
+                const { action, args } = data.content;
+                data.content = `${action}${args ? ` → ${args}` : ''}`;
+              }
+
+              // Validate the message format after potential transformation
+              if (typeof data.type !== 'string' || typeof data.content !== 'string') {
+                console.error('Invalid message format:', data);
+                continue;
+              }
+
+              // Only add messages with valid types
+              if (['thought', 'action', 'final_answer'].includes(data.type)) {
+                setMessages(prev => [...prev, {
+                  type: data.type,
+                  content: data.content
+                }]);
+              }
             } catch (e) {
-              console.error('Failed to parse SSE message:', e);
+              console.error('Failed to parse SSE message:', e, line);
             }
           }
-        });
+        }
       }
     } catch (error) {
       console.error('Failed to send query:', error);
+      setMessages(prev => [...prev, {
+        type: 'error',
+        content: 'Failed to connect to the server'
+      }]);
     } finally {
       setIsLoading(false);
     }
@@ -82,42 +119,13 @@ export default function RoverPage() {
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto pt-24 p-4 space-y-8">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="relative">
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Ask WebRover anything..."
-              className="w-full p-4 rounded-lg bg-zinc-800/50 border border-zinc-700 
-                       focus:border-blue-500 focus:ring-1 focus:ring-blue-500 
-                       transition-colors outline-none"
-            />
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="absolute right-2 top-2 px-4 py-2 bg-gradient-to-r 
-                       from-blue-500 to-teal-500 rounded-full text-white 
-                       font-medium hover:opacity-90 transition-opacity 
-                       disabled:opacity-50"
-            >
-              {isLoading ? 'Processing...' : 'Send'}
-            </button>
-          </div>
-        </form>
-
-        {/* Messages */}
-        <div className="space-y-4">
-          {messages.map((message, index) => (
-            <div
-              key={index}
-              className="p-4 rounded-lg border border-zinc-800 bg-zinc-900/50"
-            >
-              <div className="text-sm text-zinc-500 mb-2">{message.type}</div>
-              <div className="text-zinc-300">{message.content}</div>
-            </div>
-          ))}
-        </div>
+        <QueryInput
+          value={query}
+          onChange={setQuery}
+          onSubmit={handleSubmit}
+          isLoading={isLoading}
+        />
+        <ResponseDisplay messages={messages} />
       </main>
     </div>
   );
