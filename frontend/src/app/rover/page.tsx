@@ -17,8 +17,16 @@ export default function RoverPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleDisconnect = () => {
-    router.push('/');
+  const handleDisconnect = async () => {
+    try {
+      await fetch('http://localhost:8000/cleanup', {
+        method: 'POST',
+      });
+    } catch (error) {
+      console.error('Failed to cleanup browser:', error);
+    } finally {
+      router.push('/');
+    }
   };
 
   const handleSubmit = async () => {
@@ -95,7 +103,7 @@ export default function RoverPage() {
 
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-zinc-900 via-black to-black">
-      <ParticlesBackground className="absolute inset-0 z-0" />
+      <ParticlesBackground />
       
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 p-4 backdrop-blur-xl bg-black/30 z-50

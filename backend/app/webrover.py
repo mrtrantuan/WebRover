@@ -310,7 +310,7 @@ async def llm_call_node(state: AgentState):
     - Wait 
     - GoBack
     - Google
-    - Respond
+    - Respond 
 
     Key Guidelines You MUST follow:
 
@@ -334,15 +334,8 @@ async def llm_call_node(state: AgentState):
     Actions Taken: {{A list of actions taken so far}} (Could be empty, if it is the first iteration)
     Master Plan: {{A set of steps that you can use as a reference to complete the task}}
 
-    Note: The master plan serves as a strategic guide rather than a strict sequence of actions. Use it as a reference to inform your decision-making such as search term in google or ideas for the next action, while remaining flexible based on the current context.
-
-    Based on:
-    1. Current observation
-    2. Actions taken so far
-    3. Progress through the master plan
-    Choose the next action that best advances toward the goal.
-
     Observation including a screenshot of a webpage with bounding boxes and the text related to it: {{result}}"""
+
 
 
     prompt = ChatPromptTemplate(

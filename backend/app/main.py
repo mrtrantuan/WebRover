@@ -5,6 +5,7 @@ import asyncio
 from typing import Optional, Dict, Any
 from contextlib import asynccontextmanager
 import json
+import time
 # Import necessary functions from webrover.py
 from .webrover import setup_browser_2, main_agent_graph
 
@@ -108,9 +109,6 @@ async def browser_events_endpoint():
 
 async def stream_agent_response(query: str, page):
     try:
-        # Emit initial loading state
-        await emit_browser_event("status", {"status": "loading"})
-        
         initial_state = {
             "input": query,
             "page": page,
@@ -124,48 +122,63 @@ async def stream_agent_response(query: str, page):
             "answer": ""
         }
         
+        # Keep track of last event for potential retries
+        last_event = None
+        retry_count = 0
+        max_retries = 3
+        
         async for event in main_agent_graph.astream(initial_state):
-            if isinstance(event, dict):
-                # Handle page actions
-                if "parse_action" in event:
-                    action = event["parse_action"]["action"]
-                    thought = event["parse_action"]["notes"][-1]
+            try:
+                # Send periodic keepalive to prevent timeout
+                yield f"data: {{\n  \"type\": \"keepalive\",\n  \"timestamp\": {time.time()}\n}}\n\n"
+                
+                if isinstance(event, dict):
+                    last_event = event
                     
-                    # Emit thought
-                    yield f"data: {{\n  \"type\": \"thought\",\n  \"content\": {json.dumps(thought)}\n}}\n\n"
-                    
-                    # Handle different action types
-                    if isinstance(action, dict):
-                        action_type = action.get("action", "")
+                    if "parse_action" in event:
+                        action = event["parse_action"]["action"]
+                        thought = event["parse_action"]["notes"][-1]
                         
-                        # Emit browser status for navigation actions
-                        if action_type == "goto":
-                            await emit_browser_event("navigation", {
-                                "url": action["args"],
-                                "status": "loading"
-                            })
-                        elif action_type in ["click", "type", "scroll"]:
-                            await emit_browser_event("interaction", {
-                                "type": action_type,
-                                "args": action.get("args", "")
-                            })
+                        # Ensure proper encoding and escaping of JSON
+                        thought_json = json.dumps(thought, ensure_ascii=False)
+                        yield f"data: {{\n  \"type\": \"thought\",\n  \"content\": {thought_json}\n}}\n\n"
+                        
+                        if isinstance(action, dict):
+                            action_json = json.dumps(action, ensure_ascii=False)
+                            yield f"data: {{\n  \"type\": \"action\",\n  \"content\": {action_json}\n}}\n\n"
+                            
+                            # Handle browser events
+                            action_type = action.get("action", "")
+                            if action_type == "goto":
+                                await emit_browser_event("navigation", {
+                                    "url": action["args"],
+                                    "status": "loading"
+                                })
                     
-                    # Emit action for frontend
-                    yield f"data: {{\n  \"type\": \"action\",\n  \"content\": {json.dumps(action)}\n}}\n\n"
-                
-                # Handle final answer
-                if "answer_node" in event:
-                    answer = event["answer_node"]["answer"]
-                    yield f"data: {{\n  \"type\": \"final_answer\",\n  \"content\": {json.dumps(answer)}\n}}\n\n"
+                    if "answer_node" in event:
+                        answer = event["answer_node"]["answer"]
+                        answer_json = json.dumps(answer, ensure_ascii=False)
+                        yield f"data: {{\n  \"type\": \"final_answer\",\n  \"content\": {answer_json}\n}}\n\n"
+                        
+                    # Reset retry count on successful event
+                    retry_count = 0
                     
-                # Emit completion status
-                await emit_browser_event("status", {"status": "complete"})
-                
+            except Exception as e:
+                print(f"Error processing event: {str(e)}")
+                retry_count += 1
+                if retry_count <= max_retries and last_event:
+                    # Retry last event
+                    yield f"data: {{\n  \"type\": \"retry\",\n  \"content\": \"Retrying last action...\"\n}}\n\n"
+                    continue
+                else:
+                    raise e
+                    
     except Exception as e:
-        # Handle errors
-        error_message = str(e)
-        yield f"data: {{\n  \"type\": \"error\",\n  \"content\": {json.dumps(error_message)}\n}}\n\n"
-        await emit_browser_event("status", {"status": "error", "message": error_message})
+        error_json = json.dumps(str(e), ensure_ascii=False)
+        yield f"data: {{\n  \"type\": \"error\",\n  \"content\": {error_json}\n}}\n\n"
+    finally:
+        # Ensure proper stream closure
+        yield f"data: {{\n  \"type\": \"end\",\n  \"content\": \"Stream completed\"\n}}\n\n"
 
 @app.post("/query")
 async def query_agent(request: QueryRequest):
