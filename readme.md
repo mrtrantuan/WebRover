@@ -9,20 +9,14 @@
   <img src="https://img.shields.io/badge/LangGraph-FF6B6B?style=for-the-badge&logo=graph&logoColor=white" />
   <img src="https://img.shields.io/badge/Playwright-2EAD33?style=for-the-badge&logo=playwright&logoColor=white" />
   <img src="https://img.shields.io/badge/Pillow-3776AB?style=for-the-badge&logo=python&logoColor=white" />
-  <img src="https://img.shields.io/badge/uvicorn-499848?style=for-the-badge&logo=gunicorn&logoColor=white" />
+  
   
   <!-- Frontend -->
   <img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white" />
   <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" />
   <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" />
-  <img src="https://img.shields.io/badge/Framer_Motion-0055FF?style=for-the-badge&logo=framer&logoColor=white" />
   <img src="https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black" />
   
-  <!-- Development Tools -->
-  <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white" />
-  <img src="https://img.shields.io/badge/npm-CB3837?style=for-the-badge&logo=npm&logoColor=white" />
-  <img src="https://img.shields.io/badge/ESLint-4B32C3?style=for-the-badge&logo=eslint&logoColor=white" />
-  <img src="https://img.shields.io/badge/Nodemon-76D04B?style=for-the-badge&logo=nodemon&logoColor=white" />
 
   <h3>Your AI Co-pilot for Web Navigation 🚀</h3>
 
@@ -62,13 +56,22 @@ https://github.com/user-attachments/assets/95ae9afb-3fdf-47f8-857e-f6a1a0d94df5
 
 2. **Browser Automation**
    - Playwright for reliable web interaction
+   - Implements Microsoft's Set of Marks (SoM) for intelligent page annotation
    - Custom screenshot and element detection system
 
-3. **AI Decision Making**
-   - GPT-4o for understanding context and planning
-   - LangChain for orchestrating AI workflows
+3. **Visual Processing**
+   - Utilizes Microsoft's Set of Marks (SoM) [@microsoft/SoM](https://github.com/microsoft/SoM) for:
+     - Automated element detection and labeling
+     - Bounding box generation around interactive elements
+     - Numerical labeling system for LLM reference
+     - Real-time page annotation for AI decision making
 
-4. **User Interface**
+4. **AI Decision Making**
+   - GPT-4 for understanding context and planning
+   - LangChain for orchestrating AI workflows
+   - Enhanced visual context through SoM annotations
+
+5. **User Interface**
    - Real-time response display
    - Interactive query input
    - Visual feedback of navigation
