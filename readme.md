@@ -43,13 +43,7 @@ In today's digital landscape, users spend significant time performing repetitive
 ## Demo
 
 ### Video Demo
-<div align="center">
-  <video width="100%" autoplay loop muted playsinline>
-    <source src="assets/demo_edit_149.mp4" type="video/mp4">
-  </video>
-
-</div>
-
+https://github.com/user-attachments/assets/95ae9afb-3fdf-47f8-857e-f6a1a0d94df5
 > Watch WebRover autonomously navigate websites and extract information in real-time.
 
 
