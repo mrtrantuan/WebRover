@@ -1,12 +1,28 @@
 # WebRover
 
 <div align="center">
+  <!-- Backend -->
   <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" />
+  <img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" />
   <img src="https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white" />
   <img src="https://img.shields.io/badge/LangChain-121212?style=for-the-badge&logo=chainlink&logoColor=white" />
-  <img src="https://img.shields.io/badge/Playwright-2EAD33?style=for-the-badge&logo=playwright&logoColor=white" />
   <img src="https://img.shields.io/badge/LangGraph-FF6B6B?style=for-the-badge&logo=graph&logoColor=white" />
+  <img src="https://img.shields.io/badge/Playwright-2EAD33?style=for-the-badge&logo=playwright&logoColor=white" />
   <img src="https://img.shields.io/badge/Pillow-3776AB?style=for-the-badge&logo=python&logoColor=white" />
+  <img src="https://img.shields.io/badge/uvicorn-499848?style=for-the-badge&logo=gunicorn&logoColor=white" />
+  
+  <!-- Frontend -->
+  <img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white" />
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" />
+  <img src="https://img.shields.io/badge/Framer_Motion-0055FF?style=for-the-badge&logo=framer&logoColor=white" />
+  <img src="https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black" />
+  
+  <!-- Development Tools -->
+  <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white" />
+  <img src="https://img.shields.io/badge/npm-CB3837?style=for-the-badge&logo=npm&logoColor=white" />
+  <img src="https://img.shields.io/badge/ESLint-4B32C3?style=for-the-badge&logo=eslint&logoColor=white" />
+  <img src="https://img.shields.io/badge/Nodemon-76D04B?style=for-the-badge&logo=nodemon&logoColor=white" />
 
   <h3>Your AI Co-pilot for Web Navigation 🚀</h3>
 
@@ -24,21 +40,44 @@ WebRover is an autonomous AI agent designed to interpret user input and execute 
 
 In today's digital landscape, users spend significant time performing repetitive web-based tasks like research, data gathering, and information synthesis. WebRover aims to automate these tasks by combining the power of large language models with web automation capabilities, allowing users to focus on higher-level decision making while the agent handles the manual browsing work.
 
-## Architecture
+## Demo
 
-![Agent Architecture Diagram](/assets/agent_diagram.png)
+### Video Demo
+<div align="center">
+  <video width="100%" autoplay loop muted playsinline>
+    <source src="assets/demo_edit_149.mp4" type="video/mp4">
+  </video>
 
-WebRover uses a state-based architecture powered by LangGraph to manage the flow of operations:
+</div>
+
+> Watch WebRover autonomously navigate websites and extract information in real-time.
+
+
+## Features
+
+- 🤖 **AI-Powered Navigation**: Uses GPT-4 to understand context and navigate websites intelligently
+- 🎯 **Smart Element Detection**: Automatically identifies and interacts with relevant page elements
+- 📸 **Visual Feedback**: Real-time visualization of the navigation process
+- 🔄 **Autonomous Operation**: Self-correcting navigation with fallback strategies
 
 ### Core Components
 
-1. **State Management**: Uses LangGraph to maintain agent state and control flow between different actions
-2. **Language Model Integration**: Leverages OpenAI's GPT models for:
-   - Creating master plans for tasks
-   - Deciding next actions based on web page content
-   - Generating final responses
+1. **State Management**
+   - Uses LangGraph for maintaining agent state
+   - Handles complex navigation flows and decision making
 
-3. **Web Automation**: Uses Playwright for browser automation and interaction
+2. **Browser Automation**
+   - Playwright for reliable web interaction
+   - Custom screenshot and element detection system
+
+3. **AI Decision Making**
+   - GPT-4o for understanding context and planning
+   - LangChain for orchestrating AI workflows
+
+4. **User Interface**
+   - Real-time response display
+   - Interactive query input
+   - Visual feedback of navigation
 
 ### Agent Tools
 
@@ -50,6 +89,12 @@ The agent comes equipped with several tools to interact with web pages:
 - **Wait**: Adds delays to ensure page loading
 - **GoBack**: Returns to previous pages
 - **GoToSearchEngine**: Redirects to Google for new searches
+
+## Architecture
+
+![Agent Architecture Diagram](/assets/agent_diagram.png)
+
+
 
 ### How It Works
 
@@ -71,18 +116,91 @@ The agent comes equipped with several tools to interact with web pages:
    - Steps taken to complete the task
    - Final answer or result
 
-## Setup
+
+## Tech Stack
+
+### Backend
+- Python 3.12+
+- LangChain for AI orchestration
+- Playwright for browser automation
+- OpenAI GPT-4 for decision making
+- FastAPI for API endpoints
+
+### Frontend
+- Next.js 13+
+- TypeScript
+- Tailwind CSS
+- Framer Motion for animations
+
+## Backend Setup
 
 1. Clone the repository
+   ```bash
+   git clone https://github.com/hrithikkoduri18/webrover.git
+   cd webrover
+   cd backend
+   ```
+
 2. Create a virtual environment
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate (or .venv\Scripts\activate on Windows)
+   ```
+
 3. Install dependencies:
-    ```
-    bash
+    ```bash
     pip install -r requirements.txt
     ```
 
 4. Set up environment variables in `.env`:
+    ```bash
+    OPENAI_API_KEY="your_openai_api_key",
+    LANGCHAIN_API_KEY="your_langchain_api_key",
+    LANGCHAIN_TRACING_V2="true",
+    LANGCHAIN_ENDPOINT="https://api.smith.langchain.com",
+    LANGCHAIN_PROJECT="your_project_name"
     ```
-    bash
-    OPENAI_API_KEY="your_openai_api_key"
+
+5. Run the backend:
+    ```bash
+    uvicorn main.app:app --reload --port 8000
     ```
+
+6. Access the API at `http://localhost:8000`
+
+## Frontend Setup
+
+1. Clone the repository
+   ```bash
+   cd ..
+   cd frontend
+   ```
+
+2. Install dependencies:
+    ```bash
+    npm install
+    ```
+
+3. Run the frontend:
+    ```bash
+    npm run dev
+    ```
+
+4. Access the application at `http://localhost:3000`
+
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+Made with ❤️ by [@hrithikkoduri](https://github.com/hrithikkoduri)
