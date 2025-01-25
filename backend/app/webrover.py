@@ -27,11 +27,14 @@ from langgraph.graph import StateGraph, START, END
 
 
 load_dotenv()
+
 def set_env_vars(var):
-    os.environ[var] = os.getenv(var)
+    value = os.getenv(var)
+    if value is not None:
+        os.environ[var] = value
 
 
-vars = ["OPENAI_API_KEY", "LANGCHAIN_API_KEY", "LANGCHAIN_TRACING_V2", "LANGCHAIN_ENDPOINT", "LANGCHAIN_PROJECT", "TAVILY_API_KEY", "ANTHROPIC_API_KEY"]
+vars = ["OPENAI_API_KEY", "LANGCHAIN_API_KEY", "LANGCHAIN_TRACING_V2", "LANGCHAIN_ENDPOINT", "LANGCHAIN_PROJECT",]
 
 for var in vars:
     set_env_vars(var)
@@ -193,8 +196,8 @@ async def setup_browser_2(go_to_page: str):
     
     # Add browser context options
     context_options = {
-        "viewport": {"width": 1076, "height": 1076},  # Standard desktop resolution
-        #"viewport": {"width": 1280, "height": 720},
+        #"viewport": {"width": 1076, "height": 1076},  # Standard desktop resolution
+        "viewport": {"width": 1280, "height": 720},
         "user_agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
         "permissions": ['geolocation'],
         "geolocation": {"latitude": 37.7749, "longitude": -122.4194},  # Set a fixed location
