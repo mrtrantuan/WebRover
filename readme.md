@@ -160,6 +160,8 @@ The agent comes equipped with several tools to interact with web pages:
 
 5. Run the backend:
     ```bash
+    #Since main.py is inside backend/app folder
+    cd app
     uvicorn main.app:app --reload --port 8000
     ```
 

@@ -13,7 +13,6 @@ from playwright.async_api import async_playwright
 import asyncio
 from PIL import Image as PILImage
 import io
-from playwright.async_api import Page
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate
 import platform
@@ -34,7 +33,7 @@ def set_env_vars(var):
         os.environ[var] = value
 
 
-vars = ["OPENAI_API_KEY", "LANGCHAIN_API_KEY", "LANGCHAIN_TRACING_V2", "LANGCHAIN_ENDPOINT", "LANGCHAIN_PROJECT",]
+vars = ["OPENAI_API_KEY", "LANGCHAIN_API_KEY", "LANGCHAIN_TRACING_V2", "LANGCHAIN_ENDPOINT", "LANGCHAIN_PROJECT"]
 
 for var in vars:
     set_env_vars(var)
