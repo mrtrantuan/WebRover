@@ -7,8 +7,7 @@ from contextlib import asynccontextmanager
 import json
 import time
 # Import necessary functions from webrover.py
-# Removed . as both main and webrover are in same file
-from webrover import setup_browser_2, main_agent_graph
+from .webrover import setup_browser_2, main_agent_graph
 
 from fastapi.middleware.cors import CORSMiddleware
 
