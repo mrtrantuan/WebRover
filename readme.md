@@ -166,6 +166,12 @@ The agent comes equipped with several tools to interact with web pages:
     uvicorn app.main:app --reload --port 8000 
     ```
 
+   For Windows User:
+
+    ```bash
+    uvicorn app.main:app --port 8000
+    ```
+
 6. Access the API at `http://localhost:8000`
 
 ## Frontend Setup
