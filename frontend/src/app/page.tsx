@@ -47,13 +47,14 @@ export default function Home() {
       
       <SpotlightCard 
         className="w-full max-w-3xl mx-auto p-8 md:p-12"
-        spotlightColor="rgba(59, 130, 246, 0.15)"
-        gradient="from-blue-500/20 to-teal-500/20"
+        spotlightColor="rgba(139, 92, 246, 0.15)"
+        gradient="from-indigo-500/20 via-purple-500/20 to-pink-500/20"
       >
         <div className="space-y-12">
           {/* Title Section */}
           <div className="space-y-4 text-center">
-            <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-400 to-teal-400 text-transparent bg-clip-text">
+            <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 
+                          text-transparent bg-clip-text animate-flow bg-[length:200%_auto]">
               WebRover
             </h1>
             <p className="text-xl md:text-2xl text-zinc-400">
@@ -85,12 +86,12 @@ export default function Home() {
             <button
               onClick={handleConnect}
               disabled={isConnecting}
-              className="w-full px-8 py-4 bg-gradient-to-r from-blue-500 to-teal-500 rounded-full 
+              className="w-full px-8 py-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full 
                        text-white font-medium transition-all duration-300
-                       hover:opacity-90 hover:shadow-lg hover:shadow-blue-500/25 
+                       hover:opacity-90 hover:shadow-lg hover:shadow-purple-500/25 
                        disabled:opacity-50 disabled:cursor-not-allowed
                        transform hover:scale-[1.02] active:scale-[0.98]
-                       focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                       focus:outline-none focus:ring-2 focus:ring-purple-500/50"
             >
               {isConnecting ? 'Connecting...' : 'Connect to Browser'}
             </button>
