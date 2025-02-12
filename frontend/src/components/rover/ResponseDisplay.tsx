@@ -4,7 +4,8 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 import remarkGfm from 'remark-gfm';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo, useRef, ReactNode } from 'react';
+import type { Components } from 'react-markdown';
 
 interface Message {
   type: 'thought' | 'action' | 'dom_update' | 'interaction' | 'browser_action' | 
@@ -53,9 +54,49 @@ function formatMessageContent(content: any): string {
   return String(content);
 }
 
-// Define markdown components
-const markdownComponents = {
-  code({ inline, className, children, ...props }: any) {
+interface MarkdownComponentProps {
+  children: ReactNode;
+  className?: string;
+  inline?: boolean;
+  language?: string;
+  node?: any;
+  [key: string]: any;
+}
+
+const markdownComponents: Components = {
+  h1: ({ children, ...props }: MarkdownComponentProps) => (
+    <h1 className="text-3xl font-bold mt-8 mb-6 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 
+                   text-transparent bg-clip-text" {...props}>{children}</h1>
+  ),
+  h2: ({ children, ...props }: MarkdownComponentProps) => (
+    <h2 className="text-2xl font-semibold mt-6 mb-4 text-indigo-300 
+                   border-b border-indigo-500/20 pb-2" {...props}>{children}</h2>
+  ),
+  h3: ({ children, ...props }: MarkdownComponentProps) => (
+    <h3 className="text-xl font-medium mt-4 mb-3 text-purple-300" {...props}>{children}</h3>
+  ),
+  p: ({ children, ...props }: MarkdownComponentProps) => (
+    <p className="text-zinc-100 leading-7 mb-4" {...props}>{children}</p>
+  ),
+  ul: ({ children, ...props }: MarkdownComponentProps) => (
+    <ul className="my-4 space-y-2 list-none" {...props}>{children}</ul>
+  ),
+  ol: ({ children, ...props }: MarkdownComponentProps) => (
+    <ol className="my-4 space-y-2 list-decimal pl-4" {...props}>{children}</ol>
+  ),
+  li: ({ children, ...props }: MarkdownComponentProps) => (
+    <li className="flex items-start" {...props}>
+      <span className="text-indigo-400 mr-2 font-bold">•</span>
+      <span className="text-zinc-100">{children}</span>
+    </li>
+  ),
+  blockquote: ({ children, ...props }: MarkdownComponentProps) => (
+    <blockquote className="border-l-4 border-indigo-500/50 bg-indigo-500/5 
+                          pl-6 py-4 my-6 rounded-r-lg italic text-zinc-300" {...props}>
+      {children}
+    </blockquote>
+  ),
+  code: ({ inline, className, children, ...props }: MarkdownComponentProps) => {
     const match = /language-(\w+)/.exec(className || '');
     return !inline && match ? (
       <SyntaxHighlighter
@@ -72,7 +113,51 @@ const markdownComponents = {
         {children}
       </code>
     );
-  }
+  },
+  table: ({ children }: MarkdownComponentProps) => (
+    <div className="overflow-x-auto my-6">
+      <table className="w-full border-collapse">
+        {children}
+      </table>
+    </div>
+  ),
+  th: ({ children }: MarkdownComponentProps) => (
+    <th className="text-left py-2 px-4 border-b border-zinc-800 text-indigo-300 font-semibold">
+      {children}
+    </th>
+  ),
+  td: ({ children }: MarkdownComponentProps) => (
+    <td className="py-2 px-4 border-b border-zinc-800/50 text-zinc-100">
+      {children}
+    </td>
+  ),
+  a: ({ children, href, ...props }: MarkdownComponentProps) => (
+    <a 
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-indigo-400 hover:text-purple-400 underline decoration-indigo-500/30 
+                hover:decoration-purple-500/50 decoration-2 underline-offset-2 
+                transition-all duration-200 font-medium
+                hover:scale-[1.02] inline-flex items-center gap-0.5" 
+      {...props}
+    >
+      {children}
+      <svg 
+        className="w-3.5 h-3.5 ml-1 -mt-0.5 opacity-70" 
+        fill="none" 
+        viewBox="0 0 24 24" 
+        stroke="currentColor"
+      >
+        <path 
+          strokeLinecap="round" 
+          strokeLinejoin="round" 
+          strokeWidth={2} 
+          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" 
+        />
+      </svg>
+    </a>
+  ),
 };
 
 export function ResponseDisplay({ messages }: ResponseDisplayProps) {
@@ -118,7 +203,7 @@ export function ResponseDisplay({ messages }: ResponseDisplayProps) {
   }, [messages]);
 
   return (
-    <div className="w-full max-w-5xl mx-auto space-y-8 px-4">
+    <div className="w-full max-w-6xl mx-auto space-y-8 px-4">
       <AnimatePresence mode="popLayout">
         {messageGroups.map((group, groupIndex) => {
           const userMessage = group.find(m => m.type === 'user_input');
@@ -193,62 +278,13 @@ export function ResponseDisplay({ messages }: ResponseDisplayProps) {
                   animate={{ opacity: 1, x: 0 }}
                   className="flex justify-start"
                 >
-                  <div className="max-w-[90%] md:max-w-[75%] break-words bg-gradient-to-br from-indigo-500/20 
+                  <div className="max-w-[95%] md:max-w-[85%] break-words bg-gradient-to-br from-indigo-500/20 
                               via-purple-500/20 to-pink-500/20 backdrop-blur-sm border border-indigo-500/30 
-                              rounded-2xl rounded-tl-sm px-5 py-4 shadow-xl shadow-indigo-500/20">
+                              rounded-2xl rounded-tl-sm px-6 py-4 shadow-xl shadow-indigo-500/20">
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm]}
                       components={markdownComponents}
-                      className="prose prose-invert max-w-none
-                        /* Base Styles */
-                        prose-p:text-zinc-100 prose-p:leading-7 prose-p:mb-4
-                        
-                        /* Headings */
-                        prose-h1:text-3xl prose-h1:font-bold prose-h1:mb-8 
-                        prose-h1:bg-gradient-to-r prose-h1:from-indigo-400 prose-h1:via-purple-400 prose-h1:to-pink-400
-                        prose-h1:bg-clip-text prose-h1:text-transparent
-                        
-                        /* Headings */
-                        prose-h2:text-2xl prose-h2:font-semibold prose-h2:mb-6 
-                        prose-h2:text-indigo-300 prose-h2:pb-2 prose-h2:border-b 
-                        prose-h2:border-indigo-500/20
-                        
-                        prose-h3:text-xl prose-h3:font-medium prose-h3:mb-4
-                        prose-h3:text-purple-300
-                        
-                        /* Lists */
-                        prose-ul:space-y-2 prose-ul:my-4 prose-ul:list-none
-                        prose-ul:[&>li]:flex prose-ul:[&>li]:items-start 
-                        prose-ul:[&>li]:before:content-['•'] prose-ul:[&>li]:before:text-indigo-400
-                        prose-ul:[&>li]:before:mr-2 prose-ul:[&>li]:before:font-bold
-                        
-                        prose-ol:space-y-2 prose-ol:my-4 prose-ol:list-decimal
-                        prose-ol:[&>li]:pl-2 prose-ol:[&>li]:text-zinc-100
-                        
-                        /* Inline Elements */
-                        prose-strong:text-indigo-300 prose-strong:font-semibold
-                        prose-em:text-purple-300 prose-em:italic
-                        
-                        /* Links */
-                        prose-a:text-indigo-400 prose-a:no-underline 
-                        hover:prose-a:text-indigo-300 prose-a:transition-colors
-                        
-                        /* Blockquotes */
-                        prose-blockquote:border-l-4 prose-blockquote:border-indigo-500/50
-                        prose-blockquote:bg-indigo-500/5 prose-blockquote:pl-6 
-                        prose-blockquote:py-4 prose-blockquote:my-6
-                        prose-blockquote:rounded-r-lg prose-blockquote:italic
-                        
-                        /* Code Blocks */
-                        prose-code:bg-zinc-800/50 prose-code:text-indigo-300 
-                        prose-code:px-2 prose-code:py-1 prose-code:rounded-md 
-                        prose-code:font-mono prose-code:text-sm
-                        
-                        /* Tables */
-                        prose-table:w-full prose-table:my-6
-                        prose-th:text-indigo-300 prose-th:font-semibold
-                        prose-td:text-zinc-100 prose-td:py-2
-                        prose-td:border-b prose-td:border-zinc-800"
+                      className="prose prose-invert max-w-none space-y-4 overflow-x-hidden"
                     >
                       {formatMessageContent(finalMessage.content)}
                     </ReactMarkdown>

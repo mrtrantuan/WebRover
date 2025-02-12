@@ -161,28 +161,38 @@ export default function RoverPage() {
       <header className="fixed top-0 left-0 right-0 p-4 backdrop-blur-xl bg-black/30 z-50
                       border-b border-zinc-800/50 shadow-lg shadow-black/20">
         <div className="flex justify-between items-center max-w-[1600px] mx-auto">
-          <div className="flex items-center space-x-8">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 
-                          text-transparent bg-clip-text animate-flow bg-[length:200%_auto]">
-              WebRover
-            </h1>
-            
-            <div className="flex items-center space-x-6">
-              <ToggleSwitch
-                enabled={isResearchMode}
-                onChange={setIsResearchMode}
-                label="Research Mode"
-                description="Switch between Task and Research agents"
-              />
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 
+                        text-transparent bg-clip-text animate-flow bg-[length:200%_auto]">
+            WebRover
+          </h1>
+          
+          <div className="flex-1 flex justify-center items-center">
+            <div className="flex items-center space-x-24">
+              <div className="flex flex-col items-center min-w-[280px]">
+                <div className="flex items-center space-x-6">
+                  <span className="text-zinc-400">Task</span>
+                  <ToggleSwitch
+                    enabled={isResearchMode}
+                    onChange={setIsResearchMode}
+                    label=""
+                  />
+                  <span className="text-zinc-400">Research</span>
+                </div>
+                <span className="text-xs text-zinc-500 mt-2">Switch between Task and Research agents</span>
+              </div>
               
-              {isResearchMode && (
-                <ToggleSwitch
-                  enabled={isDeepResearch}
-                  onChange={setIsDeepResearch}
-                  label="Deep Research"
-                  description="Enable comprehensive research mode"
-                />
-              )}
+              <div className={`flex flex-col items-center min-w-[280px] transition-opacity duration-300 ${isResearchMode ? 'opacity-100' : 'opacity-0'}`}>
+                <div className="flex items-center space-x-6">
+                  <span className="text-zinc-400">Normal</span>
+                  <ToggleSwitch
+                    enabled={isDeepResearch}
+                    onChange={setIsDeepResearch}
+                    label=""
+                  />
+                  <span className="text-zinc-400">Deep Research</span>
+                </div>
+                <span className="text-xs text-zinc-500 mt-2">Enable comprehensive research mode</span>
+              </div>
             </div>
           </div>
 
@@ -210,8 +220,8 @@ export default function RoverPage() {
       </div>
 
       {/* Main Content */}
-      <main className="relative pt-36 pb-32 z-10 overflow-y-auto h-[calc(100vh-180px)]">
-        <div className="max-w-5xl mx-auto px-4 pb-24">
+      <main className="relative pt-24 pb-32 z-10 overflow-y-auto h-[calc(100vh-140px)]">
+        <div className="w-full pb-16">
           <ResponseDisplay messages={messages} />
         </div>
       </main>

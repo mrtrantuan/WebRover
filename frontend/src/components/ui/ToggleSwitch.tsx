@@ -6,9 +6,16 @@ interface ToggleSwitchProps {
   onChange: (value: boolean) => void;
   label: string;
   description?: string;
+  hideDescription?: boolean;
 }
 
-export function ToggleSwitch({ enabled, onChange, label, description }: ToggleSwitchProps) {
+export function ToggleSwitch({ 
+  enabled, 
+  onChange, 
+  label, 
+  description, 
+  hideDescription = true 
+}: ToggleSwitchProps) {
   return (
     <Switch.Group>
       <div className="flex items-center space-x-3">
@@ -28,8 +35,8 @@ export function ToggleSwitch({ enabled, onChange, label, description }: ToggleSw
           />
         </Switch>
         <div className="flex flex-col">
-          <Switch.Label className="text-sm font-medium text-zinc-200">{label}</Switch.Label>
-          {description && (
+          {label && <Switch.Label className="text-sm font-medium text-zinc-200">{label}</Switch.Label>}
+          {description && !hideDescription && (
             <Switch.Description className="text-xs text-zinc-400">
               {description}
             </Switch.Description>
