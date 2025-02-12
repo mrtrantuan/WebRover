@@ -10,126 +10,131 @@
   <img src="https://img.shields.io/badge/Playwright-2EAD33?style=for-the-badge&logo=playwright&logoColor=white" />
   <img src="https://img.shields.io/badge/Pillow-3776AB?style=for-the-badge&logo=python&logoColor=white" />
   
-  
   <!-- Frontend -->
   <img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white" />
   <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" />
   <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" />
   <img src="https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black" />
-  
 
   <h3>Your AI Co-pilot for Web Navigation 🚀</h3>
 
   <p align="center">
-    <b>Autonomous Web Agent | Task Automation | Information Retrieval</b>
+    <b>Autonomous Web Agent | Task Automation | Information Retrieval | Deep Research</b>
   </p>
 </div>
-
 
 ## Overview
 
 WebRover is an autonomous AI agent designed to interpret user input and execute actions by interacting with web elements to accomplish tasks or answer questions. It leverages advanced language models and web automation tools to navigate the web, gather information, and provide structured responses based on the user's needs.
 
-## Motivation
+## Key Features
 
-In today's digital landscape, users spend significant time performing repetitive web-based tasks like research, data gathering, and information synthesis. WebRover aims to automate these tasks by combining the power of large language models with web automation capabilities, allowing users to focus on higher-level decision making while the agent handles the manual browsing work.
+### Agent Capabilities
+- Three specialized agents for different use cases (Task, Research, Deep Research)
+- Dynamic agent selection based on task complexity
+- Real-time agent state visualization
+- Streaming agent actions and thoughts
 
-## Demo
+### Browser Integration
+- Local browser instance for privacy and control
+- Multi-tab management
+- PDF document handling
+- Secure browsing sessions
 
-### Video Demo
-https://github.com/user-attachments/assets/95ae9afb-3fdf-47f8-857e-f6a1a0d94df5
-> Watch WebRover autonomously navigate websites and extract information in real-time.
+### User Interface
+- Modern chat interface with real-time updates
+- Interactive agent selection
+- Action streaming with visual feedback
+- Real-time page annotations and highlights
+
+### Output Options
+- Direct chat responses
+- One-click Google Docs export
+- PDF download functionality
+- Copy to clipboard support
+
+### Research Tools
+- Vector store for information retention
+- Multi-source verification
+- Academic paper generation
+- Reference management
+
+### Technical Features
+- State-of-the-art LLM integration (GPT-4o, o3-mini-high, Claude-3.5 sonnet)
+- RAG pipeline for enhanced responses
+- LangGraph for state management
+- Playwright for reliable web automation
+
+## Agent Types
+
+### 1. Task Agent
+A specialized automation agent for executing web-based tasks and workflows.
+- Custom action planning for multi-step tasks
+- Dynamic element interaction based on context
+- Real-time task progress monitoring
+
+### 2. Research Agent
+An information gathering specialist with smart content processing.
+- Intelligent source selection and validation
+- Adaptive search refinement
+- Single-pass comprehensive information gathering
+
+### 3. Deep Research Agent (New! 🎉)
+An advanced research agent that produces academic-quality content through systematic topic exploration.
+- Automatic topic decomposition and structured research
+- Independent subtopic exploration
+- Academic paper generation with proper citations
+- Cross-referenced bibliography compilation
+
+### Agent Architecture Diagrams
+
+#### Deep Research Agent Flow
+![Deep Research Agent Architecture](assets/deep_research_agent.png)
+
+*Deep Research Agent's workflow for comprehensive research and content generation*
+
+### Research Agent Flow
+![Research Agent Architecture](assets/research_agent.png)
+
+*Research Agent's workflow for information gathering and synthesis*
 
 
-## Features
+#### Task Agent Flow
+![Task Agent Architecture](assets/task_agent.png)
 
-- 🤖 **AI-Powered Navigation**: Uses GPT-4 to understand context and navigate websites intelligently
-- 🎯 **Smart Element Detection**: Automatically identifies and interacts with relevant page elements
-- 📸 **Visual Feedback**: Real-time visualization of the navigation process
-- 🔄 **Autonomous Operation**: Self-correcting navigation with fallback strategies
+*Task Agent's workflow for automating web interactions*
 
-### Core Components
 
-1. **State Management**
-   - Uses LangGraph for maintaining agent state
-   - Handles complex navigation flows and decision making
-
-2. **Browser Automation**
-   - Playwright for reliable web interaction
-   - Implements Microsoft's Set of Marks (SoM) for intelligent page annotation
-   - Custom screenshot and element detection system
-
-3. **Visual Processing**
-   - Utilizes Microsoft's Set of Marks (SoM) [@microsoft/SoM](https://github.com/microsoft/SoM) for:
-     - Automated element detection and labeling
-     - Bounding box generation around interactive elements
-     - Numerical labeling system for LLM reference
-     - Real-time page annotation for AI decision making
-
-4. **AI Decision Making**
-   - GPT-4 for understanding context and planning
-   - LangChain for orchestrating AI workflows
-   - Enhanced visual context through SoM annotations
-
-5. **User Interface**
-   - Real-time response display
-   - Interactive query input
-   - Visual feedback of navigation
-
-### Agent Tools
-
-The agent comes equipped with several tools to interact with web pages:
-
-- **Click**: Simulates mouse clicks on web elements
-- **Type**: Enters text into input fields
-- **Scroll**: Navigates through pages (supports both regular pages and PDFs)
-- **Wait**: Adds delays to ensure page loading
-- **GoBack**: Returns to previous pages
-- **GoToSearchEngine**: Redirects to Google for new searches
 
 ## Architecture
 
-![Agent Architecture Diagram](/assets/agent_diagram.png)
+The system is built on a modern tech stack with three distinct agent types, each powered by:
 
+1. **State Management**
+   - LangGraph for maintaining agent state
+   - Handles complex navigation flows and decision making
+   - Structured workflow management
 
+2. **Browser Automation**
+   - Playwright for reliable web interaction
+   - Custom element detection and interaction system
+   - Automated navigation and content extraction
 
-### How It Works
+3. **Content Processing**
+   - RAG (Retrieval Augmented Generation) pipeline
+   - Vector store integration for efficient information storage
+   - PDF and webpage content extraction
+   - Automatic content structuring and organization
 
-1. **Task Planning**: When given a task, the agent first creates a master plan using the LLM
+4. **AI Decision Making**
+   - Multiple LLM integration (GPT-4, Claude)
+   - Context-aware navigation
+   - Self-review mechanisms
+   - Structured output generation
 
-2. **Page Analysis**: For each page, the agent:
-   - Captures a screenshot
-   - Identifies interactive elements
-   - Creates bounding boxes around elements
-   - Assigns numerical labels for reference
+## Setup Instructions
 
-3. **Decision Making**: The agent:
-   - Analyzes the current page state
-   - Compares against the master plan
-   - Decides on the next action
-   - Executes the chosen tool
-
-4. **Response Generation**: After gathering necessary information, generates a structured response with:
-   - Steps taken to complete the task
-   - Final answer or result
-
-
-## Tech Stack
-
-### Backend
-- Python 3.12+
-- LangChain for AI orchestration
-- Playwright for browser automation
-- OpenAI GPT-4 for decision making
-- FastAPI for API endpoints
-
-### Frontend
-- Next.js 13+
-- TypeScript
-- Tailwind CSS
-- Framer Motion for animations
-
-## Backend Setup
+### Backend Setup
 
 1. Clone the repository
    ```bash
@@ -138,27 +143,52 @@ The agent comes equipped with several tools to interact with web pages:
    cd backend
    ```
 
-2. Create a virtual environment
+2. Install Poetry (if not already installed)
+
+   Mac/Linux:
    ```bash
-   python -m venv .venv
-   source .venv/bin/activate (or .venv\Scripts\activate on Windows)
+   curl -sSL https://install.python-poetry.org | python3 -
+   ```
+   Windows:
+   ```bash
+   (Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python -
    ```
 
-3. Install dependencies:
-    ```bash
-    pip install -r requirements.txt
-    ```
+3. Set Python version for Poetry
+   ```bash
+   poetry env use python3.12
+   ```
 
-4. Set up environment variables in `.env`:
-    ```bash
-    OPENAI_API_KEY="your_openai_api_key"
-    LANGCHAIN_API_KEY="your_langchain_api_key"
-    LANGCHAIN_TRACING_V2="true"
-    LANGCHAIN_ENDPOINT="https://api.smith.langchain.com"
-    LANGCHAIN_PROJECT="your_project_name"
-    ```
+4. Install dependencies using Poetry:
+   ```bash
+   poetry install
+   ```
 
-5. Run the backend:
+5. Activate the Poetry shell:
+   For Unix/Linux/MacOS:
+   ```bash
+   poetry shell
+   # or manually
+   source $(poetry env info --path)/bin/activate
+   ```
+   For Windows:
+   ```bash
+   poetry shell
+   # or manually
+   & (poetry env info --path)\Scripts\activate
+   ```
+
+6. Set up environment variables in `.env`:
+   ```bash
+   OPENAI_API_KEY="your_openai_api_key"
+   LANGCHAIN_API_KEY="your_langchain_api_key"
+   LANGCHAIN_TRACING_V2="true"
+   LANGCHAIN_ENDPOINT="https://api.smith.langchain.com"
+   LANGCHAIN_PROJECT="your_project_name"
+   ANTHROPIC_API_KEY="your_anthropic_api_key"
+   ```
+
+7. Run the backend:
 
    Make sure you are in the backend folder
 
@@ -172,26 +202,26 @@ The agent comes equipped with several tools to interact with web pages:
     uvicorn app.main:app --port 8000
     ```
 
-6. Access the API at `http://localhost:8000`
+8. Access the API at `http://localhost:8000`
 
-## Frontend Setup
+### Frontend Setup
 
-1. Open a new terminal and make sure you are in the WebRover folder
+1. Open a new terminal and make sure you are in the WebRover folder:
    ```bash
    cd frontend
    ```
 
 2. Install dependencies:
-    ```bash
-    npm install
-    ```
+   ```bash
+   npm install
+   ```
 
 3. Run the frontend:
-    ```bash
-    npm run dev
-    ```
+   ```bash
+   npm run dev
+   ```
 
-4. Access the application at `http://localhost:3000`
+4. Access the frontend at `http://localhost:3000`
 
 
 ## Contributing
