@@ -8,11 +8,17 @@ import json
 import time
 # Import necessary functions from agent files
 from .task_agent import task_agent
-from .research_agent import research_agent
+from .research_agent import research_agent, type
 from .deep_research_agent import deep_research_agent
 from .browser_manager import setup_browser, cleanup_browser_session
 
 from fastapi.middleware.cors import CORSMiddleware
+
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from playwright.async_api import async_playwright
+
+app = FastAPI()
 
 app = FastAPI()
 
@@ -425,6 +431,79 @@ async def query_agent(request: QueryRequest):
             "Transfer-Encoding": "chunked"
         }
     )
+
+
+@app.post("/api/docs/type")
+async def type_in_docs(request: Request):
+    try:
+        if not browser_session["page"]:
+            return JSONResponse(
+                status_code=400,
+                content={"error": "Browser not initialized. Call /setup-browser first"}
+            )
+
+        data = await request.json()
+        content = data.get('content')
+        
+        if not content:
+            return JSONResponse(
+                status_code=400,
+                content={"error": "Content is required"}
+            )
+
+        page = browser_session["page"]
+        await page.goto('https://docs.google.com/document/create')
+        await page.wait_for_load_state("domcontentloaded")
+        await asyncio.sleep(2)  # Wait for editor to be fully loaded
+
+        # Wait for and click the editor canvas
+        editor_selector = ".kix-appview-editor"
+        await page.wait_for_selector(editor_selector)
+        editor = await page.query_selector(editor_selector)
+        
+        if editor:
+            bbox = await editor.bounding_box()
+            if bbox:
+                # Click in the middle of the editor
+                x = bbox['x'] + bbox['width'] / 2
+                y = bbox['y'] + bbox['height'] / 2
+                
+                await page.mouse.click(x, y)
+                await asyncio.sleep(1)
+
+                state = {
+                    "page": page,
+                    "action": {
+                        "action_element": {
+                            "type": "text_editor",
+                            "description": "Google Docs editor",
+                            "x": x,
+                            "y": y,
+                            "xpath": f"//div[contains(@class, 'kix-appview-editor')]",
+                            "inViewport": True
+                        },
+                        "args": content
+                    }
+                }
+                
+                result = await type(state)
+                
+                return JSONResponse(
+                    status_code=200,
+                    content={"message": "Content typed successfully", "actions": result["actions_taken"]}
+                )
+        
+        return JSONResponse(
+            status_code=500,
+            content={"error": "Text editor not found"}
+        )
+            
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Failed to type content: {str(e)}"}
+        )
+
 
 if __name__ == "__main__":
     import uvicorn

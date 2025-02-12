@@ -22,8 +22,8 @@ export default function RoverPage() {
   const [query, setQuery] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isResearchMode, setIsResearchMode] = useState(false);
-  const [isDeepResearch, setIsDeepResearch] = useState(false);
+  const [isResearchMode, setIsResearchMode] = useState(true);
+  const [isDeepResearch, setIsDeepResearch] = useState(true);
 
   const currentAgent: AgentType = isResearchMode 
     ? (isDeepResearch ? 'deep_research' : 'research')
@@ -31,13 +31,19 @@ export default function RoverPage() {
 
   const handleDisconnect = async () => {
     try {
-      await fetch('http://localhost:8000/cleanup', {
+      const response = await fetch('http://localhost:8000/cleanup', {
         method: 'POST',
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to cleanup browser');
+      }
+      
+      await router.push('/');
     } catch (error) {
       console.error('Failed to cleanup browser:', error);
-    } finally {
-      router.push('/');
+      // Still try to navigate even if cleanup fails
+      await router.push('/');
     }
   };
 

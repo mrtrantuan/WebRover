@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState, useMemo, useRef, ReactNode } from 'react';
 import type { Components } from 'react-markdown';
+import { ResponseActions } from './ResponseActions';
 
 interface Message {
   type: 'thought' | 'action' | 'dom_update' | 'interaction' | 'browser_action' | 
@@ -55,34 +56,47 @@ function formatMessageContent(content: any): string {
 }
 
 interface MarkdownComponentProps {
-  children: ReactNode;
+  children?: ReactNode;
   className?: string;
   inline?: boolean;
+  href?: string;
   language?: string;
   node?: any;
   [key: string]: any;
 }
 
-const markdownComponents: Components = {
+export const markdownComponents: Components = {
   h1: ({ children, ...props }: MarkdownComponentProps) => (
     <h1 className="text-3xl font-bold mt-8 mb-6 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 
-                   text-transparent bg-clip-text" {...props}>{children}</h1>
+                   text-transparent bg-clip-text" {...props}>
+      {children}
+    </h1>
   ),
   h2: ({ children, ...props }: MarkdownComponentProps) => (
     <h2 className="text-2xl font-semibold mt-6 mb-4 text-indigo-300 
-                   border-b border-indigo-500/20 pb-2" {...props}>{children}</h2>
+                   border-b border-indigo-500/20 pb-2" {...props}>
+      {children}
+    </h2>
   ),
   h3: ({ children, ...props }: MarkdownComponentProps) => (
-    <h3 className="text-xl font-medium mt-4 mb-3 text-purple-300" {...props}>{children}</h3>
+    <h3 className="text-xl font-medium mt-4 mb-3 text-purple-300" {...props}>
+      {children}
+    </h3>
   ),
   p: ({ children, ...props }: MarkdownComponentProps) => (
-    <p className="text-zinc-100 leading-7 mb-4" {...props}>{children}</p>
+    <p className="text-zinc-100 leading-7 mb-4" {...props}>
+      {children}
+    </p>
   ),
   ul: ({ children, ...props }: MarkdownComponentProps) => (
-    <ul className="my-4 space-y-2 list-none" {...props}>{children}</ul>
+    <ul className="my-4 space-y-2 list-none" {...props}>
+      {children}
+    </ul>
   ),
   ol: ({ children, ...props }: MarkdownComponentProps) => (
-    <ol className="my-4 space-y-2 list-decimal pl-4" {...props}>{children}</ol>
+    <ol className="my-4 space-y-2 list-decimal pl-4" {...props}>
+      {children}
+    </ol>
   ),
   li: ({ children, ...props }: MarkdownComponentProps) => (
     <li className="flex items-start" {...props}>
@@ -276,7 +290,7 @@ export function ResponseDisplay({ messages }: ResponseDisplayProps) {
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="flex justify-start"
+                  className="flex flex-col justify-start"
                 >
                   <div className="max-w-[95%] md:max-w-[85%] break-words bg-gradient-to-br from-indigo-500/20 
                               via-purple-500/20 to-pink-500/20 backdrop-blur-sm border border-indigo-500/30 
@@ -288,6 +302,10 @@ export function ResponseDisplay({ messages }: ResponseDisplayProps) {
                     >
                       {formatMessageContent(finalMessage.content)}
                     </ReactMarkdown>
+                    <ResponseActions 
+                      content={formatMessageContent(finalMessage.content)}
+                      isResearchResponse={finalMessage.type === 'final_response' || finalMessage.type === 'final_answer'}
+                    />
                   </div>
                 </motion.div>
               )}

@@ -290,11 +290,11 @@ async def click(state: AgentState):
                     async with page.context.expect_page(timeout=10000) as new_page_info:
                         if platform.system() == "Darwin":
                             await page.keyboard.down("Meta")
-                            await page.mouse.click(bbox_x, bbox_y)
+                            await page.mouse.click(bbox_x, bbox_y, click_count=3)
                             await page.keyboard.up("Meta")
                         else:
                             await page.keyboard.down("Control")
-                            await page.mouse.click(bbox_x, bbox_y)
+                            await page.mouse.click(bbox_x, bbox_y, click_count=3)
                             await page.keyboard.up("Control")
                         
                         try:
@@ -324,6 +324,19 @@ async def click(state: AgentState):
             else:
                 await page.mouse.click(bbox_x, bbox_y)
         except Exception as e:
+            await page.evaluate("""
+                async () => {
+                    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+                    
+                    // Scroll back to the top after scrolling down
+                    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+                    
+                    // Wait until the scroll position reaches the top
+                    while (window.scrollY > 0) {
+                        await delay(100);
+                    }
+                }
+                """)
             return {
                 "actions_taken": ["All click attempts failed, retrying..."],
                 "page": state["page"],
@@ -461,6 +474,18 @@ async def close_opened_link(state: AgentState):
     context = state["page"].context  # Get the browser context from the current page
     await state["page"].close()        # Close the current tab
     page = context.pages[-1] 
+    await page.evaluate("""
+    async () => {
+        const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+        // Scroll back to the top after scrolling down
+        window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+                        
+        // Wait until the scroll position reaches the top
+        while (window.scrollY > 0) {
+            await delay(100);
+        }
+    }
+    """)
     print(page.url)
     return {"actions_taken": [f"Closed the opened link {current_url} and switched to {page.url}"], "page": page}
 
