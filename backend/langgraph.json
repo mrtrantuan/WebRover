@@ -1,11 +1,14 @@
 {
-    "dockerfile_lines": [],
-    "graphs": {
-      "webrover": "./webrover.py:main_agent_graph"
-    },
-    "env": "./.env",
-    "python_version": "3.12",
-    "dependencies": [
-      "."
-    ]
-  }
+  "dockerfile_lines": [],
+  "graphs": {
+    "deep_research_agent": "app/deep_research_agent.py:deep_research_agent",
+    "task_agent": "app/task_agent.py:task_agent",
+    "research_agent": "app/research_agent.py:research_agent"
+  },
+  "env": "./.env",
+  "python_version": "3.12",
+  "dependencies": [
+    "."
+  ],
+  "package_manager": "poetry"
+}

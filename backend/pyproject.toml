@@ -1,0 +1,42 @@
+[tool.poetry]
+name = "webrover"
+version = "0.1.0"
+description = "WebRover is an autonomous AI agent designed to interpret user input and execute actions by interacting with web elements to accomplish tasks or answer questions."
+authors = ["Hrithik Koduri <hrithikkoduri@gmail.com>"]
+license = "MIT"
+# Remove package-mode = false
+packages = [
+    {include = "app"},
+    {include = "Browser"}
+]
+
+[tool.poetry.dependencies]
+python = ">=3.12,<3.13"
+langchain = "0.3.14"
+langchain-anthropic = "0.3.5"
+langchain-core = "^0.3.34"
+langchain-openai = "0.3.0"
+langgraph = "0.2.62"
+openai = "1.59.6"
+anthropic = "0.45.2"
+playwright = "1.49.1"
+pydantic = "2.10.5"
+python-dotenv = "1.0.1"
+ipython = "8.31.0"
+# Replace spacy with specific components needed
+langchain-text-splitters = "^0.3.6"
+newspaper3k = "^0.2.8"
+aiohttp = "^3.11.12"
+pypdf2 = "^3.0.1"
+langchain-chroma = "^0.2.1"
+chromadb = "^0.6.3"
+beautifulsoup4 = "^4.13.3"
+lxml = {extras = ["html-clean"], version = "^5.3.1"}
+lxml-html-clean = "^0.4.1"
+# Add nltk as alternative to spacy for text splitting
+nltk = "^3.8.1"
+spacy = "^3.8.4"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

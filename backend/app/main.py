@@ -2,15 +2,17 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import asyncio
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Literal
 from contextlib import asynccontextmanager
 import json
 import time
-# Import necessary functions from webrover.py
-from .webrover import setup_browser, main_agent_graph
+# Import necessary functions from agent files
+from .task_agent import task_agent
+from .research_agent import research_agent
+from .deep_research_agent import deep_research_agent
+from .browser_manager import setup_browser, cleanup_browser_session
 
 from fastapi.middleware.cors import CORSMiddleware
-
 
 app = FastAPI()
 
@@ -22,11 +24,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-
-# Global variable to store browser session
-browser_session: Dict[str, Any] = {
-    "playwright": None,
+# Global variables for browser session
+browser_session = {
     "browser": None,
     "page": None
 }
@@ -39,12 +38,13 @@ class BrowserSetupRequest(BaseModel):
 
 class QueryRequest(BaseModel):
     query: str
+    agent_type: Literal["task", "research", "deep_research"]
 
 @app.post("/setup-browser")
 async def setup_browser_endpoint(request: BrowserSetupRequest):
     try:
         # Clear any existing session
-        if browser_session["playwright"]:
+        if browser_session["browser"]:
             await cleanup_browser()
             
         # Setup new browser session
@@ -67,22 +67,19 @@ async def setup_browser_endpoint(request: BrowserSetupRequest):
 @app.post("/cleanup")
 async def cleanup_browser():
     try:
-        if browser_session["page"]:
-            await browser_session["page"].close()
         if browser_session["browser"]:
-            await browser_session["browser"].close()
-        if browser_session["playwright"]:
-            await browser_session["playwright"].stop()
+            # Use the proper cleanup function
+            await cleanup_browser_session(browser_session["browser"])
             
-        # Reset session
-        browser_session.update({
-            "playwright": None,
-            "browser": None,
-            "page": None
-        })
+            # Clear the session
+            browser_session.update({
+                "browser": None,
+                "page": None
+            })
         
         return {"status": "success", "message": "Browser cleanup complete"}
     except Exception as e:
+        print(f"Cleanup error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to cleanup browser: {str(e)}")
 
 async def emit_browser_event(event_type: str, data: Dict[str, Any]):
@@ -110,90 +107,323 @@ async def browser_events_endpoint():
         }
     )
 
-async def stream_agent_response(query: str, page):
+async def stream_task_agent_response(query: str, page, agent_graph):
     try:
         initial_state = {
             "input": query,
             "page": page,
-            "image": "",
             "master_plan": None,
-            "bboxes": [],
+            "dom_elements": [],
+            "chat_history": [],
+            "decide_action": None,
             "actions_taken": [],
-            "action": None,
-            "last_action": "",
-            "notes": [],
-            "answer": ""
+            "actions": None,
+            "response": ""
         }
         
-        # Keep track of last event for potential retries
-        last_event = None
-        retry_count = 0
-        max_retries = 3
-        
-        async for event in main_agent_graph.astream(
+        async for event in agent_graph.astream(
             initial_state,
-             {"recursion_limit": 400}
-            ):
+            {"recursion_limit": 400}
+        ):
             try:
-                # Send periodic keepalive to prevent timeout
+                # Send keepalive more frequently
                 yield f"data: {{\n  \"type\": \"keepalive\",\n  \"timestamp\": {time.time()}\n}}\n\n"
+                await asyncio.sleep(0.1)  # Small delay to prevent overwhelming
                 
                 if isinstance(event, dict):
-                    last_event = event
-                    
-                    if "parse_action" in event:
-                        action = event["parse_action"]["action"]
-                        thought = event["parse_action"]["notes"][-1]
-                        
-                        # Ensure proper encoding and escaping of JSON
+                    if "decide_immediate_action" in event:
+                        thought = event["decide_immediate_action"]["decide_action"]["thought"]
                         thought_json = json.dumps(thought, ensure_ascii=False)
                         yield f"data: {{\n  \"type\": \"thought\",\n  \"content\": {thought_json}\n}}\n\n"
-                        
-                        if isinstance(action, dict):
-                            action_json = json.dumps(action, ensure_ascii=False)
-                            yield f"data: {{\n  \"type\": \"action\",\n  \"content\": {action_json}\n}}\n\n"
-                            
-                            # Handle browser events
-                            action_type = action.get("action", "")
-                            if action_type == "goto":
-                                await emit_browser_event("navigation", {
-                                    "url": action["args"],
-                                    "status": "loading"
-                                })
                     
-                    if "answer_node" in event:
-                        answer = event["answer_node"]["answer"]
-                        answer_json = json.dumps(answer, ensure_ascii=False)
-                        yield f"data: {{\n  \"type\": \"final_answer\",\n  \"content\": {answer_json}\n}}\n\n"
-                        
-                    # Reset retry count on successful event
-                    retry_count = 0
+                    if "decide_url" in event:
+                        action = event["decide_url"]["actions_taken"]
+                        action_json = json.dumps(action, ensure_ascii=False)
+                        yield f"data: {{\n  \"type\": \"action\",\n  \"content\": {action_json}\n}}\n\n"
                     
+                    # Stream DOM updates
+                    if any(key in event for key in ["get_all_elements", "get_all_input_elements", 
+                                                  "get_all_button_elements", "get_all_link_elements"]):
+                        action = event[list(event.keys())[0]]["actions_taken"]
+                        action_json = json.dumps(action, ensure_ascii=False)
+                        yield f"data: {{\n  \"type\": \"dom_update\",\n  \"content\": {action_json}\n}}\n\n"
+                    
+                    # Stream interactions
+                    if any(key in event for key in ["interact_with_input_elements", 
+                                                  "interact_with_button_elements",
+                                                  "interact_with_link_elements"]):
+                        actions = event[list(event.keys())[0]]["actions"]["element_actions"]
+                        actions_json = json.dumps(actions, ensure_ascii=False)
+                        yield f"data: {{\n  \"type\": \"interaction\",\n  \"content\": {actions_json}\n}}\n\n"
+                    
+                    # Stream browser actions
+                    if any(key in event for key in ["click", "type", "wait", "go_back", "go_to_search"]):
+                        actions = event[list(event.keys())[0]]["actions_taken"]
+                        actions_json = json.dumps(actions, ensure_ascii=False)
+                        yield f"data: {{\n  \"type\": \"browser_action\",\n  \"content\": {actions_json}\n}}\n\n"
+                    
+                    if "respond" in event:
+                        response = event["respond"]["response"]
+                        response_json = json.dumps(response, ensure_ascii=False)
+                        yield f"data: {{\n  \"type\": \"final_response\",\n  \"content\": {response_json}\n}}\n\n"
+                        
+                    # After each event, send another keepalive
+                    yield f"data: {{\n  \"type\": \"keepalive\",\n  \"timestamp\": {time.time()}\n}}\n\n"
+                        
             except Exception as e:
-                print(f"Error processing event: {str(e)}")
-                retry_count += 1
-                if retry_count <= max_retries and last_event:
-                    # Retry last event
-                    yield f"data: {{\n  \"type\": \"retry\",\n  \"content\": \"Retrying last action...\"\n}}\n\n"
-                    continue
-                else:
-                    raise e
-                    
+                error_json = json.dumps(str(e), ensure_ascii=False)
+                yield f"data: {{\n  \"type\": \"error\",\n  \"content\": {error_json}\n}}\n\n"
+                continue  # Continue processing even if one event fails
+                
     except Exception as e:
         error_json = json.dumps(str(e), ensure_ascii=False)
         yield f"data: {{\n  \"type\": \"error\",\n  \"content\": {error_json}\n}}\n\n"
     finally:
-        # Ensure proper stream closure
+        # Ensure we have a small delay before ending
+        await asyncio.sleep(0.5)
+        # Send final keepalive
+        yield f"data: {{\n  \"type\": \"keepalive\",\n  \"timestamp\": {time.time()}\n}}\n\n"
+        # Send completion signal
+        yield f"data: {{\n  \"type\": \"complete\",\n  \"content\": \"Processing completed\"\n}}\n\n"
+        # Small delay before final end message
+        await asyncio.sleep(0.5)
+        # Send end message
+        yield f"data: {{\n  \"type\": \"end\",\n  \"content\": \"Stream completed\"\n}}\n\n"
+
+async def stream_research_agent_response(query: str, page, agent_graph):
+    try:
+        initial_state = {
+            "input": query,
+            "page": page,
+            "dom_elements": [],
+            "action": None,
+            "actions_taken": [],
+            "visited_urls": [],
+            "conversation_history": [],
+            "answer": "",
+            "new_page": False,
+            "is_pdf": False
+        }
+        
+        async for event in agent_graph.astream(
+            initial_state,
+            {"recursion_limit": 400}
+        ):
+            try:
+                # Send keepalive more frequently
+                yield f"data: {{\n  \"type\": \"keepalive\",\n  \"timestamp\": {time.time()}\n}}\n\n"
+                
+                if isinstance(event, dict):
+                    # Handle LLM thoughts
+                    if "llm_call_node" in event:
+                        thought = event["llm_call_node"]["action"]["thought"]
+                        thought_json = json.dumps(thought, ensure_ascii=False)
+                        yield f"data: {{\n  \"type\": \"thought\",\n  \"content\": {thought_json}\n}}\n\n"
+                    
+                    # Handle browser actions
+                    if any(key in event for key in ["click", "type", "wait", "go_back", "go_to_search"]):
+                        actions = event[list(event.keys())[0]]["actions_taken"]
+                        actions_json = json.dumps(actions, ensure_ascii=False)
+                        yield f"data: {{\n  \"type\": \"action\",\n  \"content\": {actions_json}\n}}\n\n"
+                    
+                    # Handle RAG operations
+                    if "web_page_rag" in event:
+                        action = event["web_page_rag"]["actions_taken"]
+                        action_json = json.dumps(action, ensure_ascii=False)
+                        yield f"data: {{\n  \"type\": \"rag_action\",\n  \"content\": {action_json}\n}}\n\n"
+                    
+                    # Handle self review
+                    if "self_review" in event:
+                        action = event["self_review"]["actions_taken"]
+                        action_json = json.dumps(action, ensure_ascii=False)
+                        yield f"data: {{\n  \"type\": \"review\",\n  \"content\": {action_json}\n}}\n\n"
+                    
+                    # Handle closing tabs
+                    if "close_opened_link" in event:
+                        action = event["close_opened_link"]["actions_taken"]
+                        action_json = json.dumps(action, ensure_ascii=False)
+                        yield f"data: {{\n  \"type\": \"close_tab\",\n  \"content\": {action_json}\n}}\n\n"
+                    
+                    # Handle final answer
+                    if "answer_node" in event:
+                        action = event["answer_node"]["actions_taken"]
+                        action_json = json.dumps(action, ensure_ascii=False)
+                        yield f"data: {{\n  \"type\": \"action\",\n  \"content\": {action_json}\n}}\n\n"
+                        
+                        answer = event["answer_node"]["answer"]
+                        answer_json = json.dumps(answer, ensure_ascii=False)
+                        yield f"data: {{\n  \"type\": \"final_answer\",\n  \"content\": {answer_json}\n}}\n\n"
+                        
+                        conversation_history = event["answer_node"]["conversation_history"]
+                        history_json = json.dumps(conversation_history, ensure_ascii=False)
+                        yield f"data: {{\n  \"type\": \"conversation_history\",\n  \"content\": {history_json}\n}}\n\n"
+                    
+                    # Handle RAG store cleanup
+                    if "empty_rag_store" in event:
+                        action = event["empty_rag_store"]["actions_taken"]
+                        action_json = json.dumps(action, ensure_ascii=False)
+                        yield f"data: {{\n  \"type\": \"cleanup\",\n  \"content\": {action_json}\n}}\n\n"
+                        
+                await asyncio.sleep(0.1)  # Small delay between events
+                        
+            except Exception as e:
+                error_json = json.dumps(str(e), ensure_ascii=False)
+                yield f"data: {{\n  \"type\": \"error\",\n  \"content\": {error_json}\n}}\n\n"
+                continue
+                
+    except Exception as e:
+        error_json = json.dumps(str(e), ensure_ascii=False)
+        yield f"data: {{\n  \"type\": \"error\",\n  \"content\": {error_json}\n}}\n\n"
+    finally:
+        await asyncio.sleep(0.5)
+        yield f"data: {{\n  \"type\": \"complete\",\n  \"content\": \"Processing completed\"\n}}\n\n"
+        await asyncio.sleep(0.5)
+        yield f"data: {{\n  \"type\": \"end\",\n  \"content\": \"Stream completed\"\n}}\n\n"
+
+async def stream_deep_research_agent_response(query: str, page, agent_graph):
+    try:
+        initial_state = {
+            "input": query,
+            "page": page,
+            "dom_elements": [],
+            "action": None,
+            "actions_taken": [],
+            "visited_urls": [],
+            "conversation_history": [],
+            "subtopics": [],
+            "subtopic_answers": [],
+            "final_answer": "",
+            "new_page": False,
+            "is_pdf": False,
+            "subtopic_status": [],
+            "subtopic_to_research": "",
+            "number_of_urls_visited": 0,
+            "collect_more_info": False
+        }
+        
+        async for event in agent_graph.astream(
+            initial_state,
+            {"recursion_limit": 400}
+        ):
+            try:
+                # Send keepalive more frequently
+                yield f"data: {{\n  \"type\": \"keepalive\",\n  \"timestamp\": {time.time()}\n}}\n\n"
+                
+                if isinstance(event, dict):
+                    # Handle topic breakdown
+                    if "topic_breakdown" in event:
+                        subtopics = event["topic_breakdown"]["subtopics"]
+                        subtopics_json = json.dumps(subtopics, ensure_ascii=False)
+                        yield f"data: {{\n  \"type\": \"subtopics\",\n  \"content\": {subtopics_json}\n}}\n\n"
+                    
+                    # Handle LLM thoughts
+                    if "llm_call_node" in event:
+                        thought = event["llm_call_node"]["action"]["thought"]
+                        thought_json = json.dumps(thought, ensure_ascii=False)
+                        yield f"data: {{\n  \"type\": \"thought\",\n  \"content\": {thought_json}\n}}\n\n"
+                    
+                    # Handle browser actions
+                    if any(key in event for key in ["click", "type", "wait", "go_back", "go_to_search"]):
+                        action = event[list(event.keys())[0]]["actions_taken"]
+                        action_json = json.dumps(action, ensure_ascii=False)
+                        yield f"data: {{\n  \"type\": \"browser_action\",\n  \"content\": {action_json}\n}}\n\n"
+                    
+                    # Handle RAG operations
+                    if "web_page_rag" in event:
+                        action = event["web_page_rag"]["actions_taken"]
+                        action_json = json.dumps(action, ensure_ascii=False)
+                        yield f"data: {{\n  \"type\": \"rag_action\",\n  \"content\": {action_json}\n}}\n\n"
+                    
+                    # Handle self review
+                    if "self_review" in event:
+                        action = event["self_review"]["actions_taken"]
+                        action_json = json.dumps(action, ensure_ascii=False)
+                        yield f"data: {{\n  \"type\": \"review\",\n  \"content\": {action_json}\n}}\n\n"
+                    
+                    # Handle subtopic answers
+                    if "subtopic_answer_node" in event:
+                        action = event["subtopic_answer_node"]["actions_taken"]
+                        action_json = json.dumps(action, ensure_ascii=False)
+                        yield f"data: {{\n  \"type\": \"subtopic_answer\",\n  \"content\": {action_json}\n}}\n\n"
+                        
+                        subtopic_status = event["subtopic_answer_node"]["subtopic_status"]
+                        status_json = json.dumps(subtopic_status, ensure_ascii=False)
+                        yield f"data: {{\n  \"type\": \"subtopic_status\",\n  \"content\": {status_json}\n}}\n\n"
+                    
+                    # Handle closing tabs
+                    if "close_opened_link" in event:
+                        action = event["close_opened_link"]["actions_taken"]
+                        action_json = json.dumps(action, ensure_ascii=False)
+                        yield f"data: {{\n  \"type\": \"close_tab\",\n  \"content\": {action_json}\n}}\n\n"
+                    
+                    # Handle research compilation
+                    if "compile_research" in event:
+                        action = event["compile_research"]["actions_taken"]
+                        action_json = json.dumps(action, ensure_ascii=False)
+                        yield f"data: {{\n  \"type\": \"compile\",\n  \"content\": {action_json}\n}}\n\n"
+                        
+                        answer = event["compile_research"]["final_answer"]
+                        answer_json = json.dumps(answer, ensure_ascii=False)
+                        yield f"data: {{\n  \"type\": \"final_answer\",\n  \"content\": {answer_json}\n}}\n\n"
+                        
+                        conversation_history = event["compile_research"]["conversation_history"]
+                        history_json = json.dumps(conversation_history, ensure_ascii=False)
+                        yield f"data: {{\n  \"type\": \"conversation_history\",\n  \"content\": {history_json}\n}}\n\n"
+                    
+                    # Handle RAG store cleanup
+                    if "empty_rag_store" in event:
+                        action = event["empty_rag_store"]["actions_taken"]
+                        action_json = json.dumps(action, ensure_ascii=False)
+                        yield f"data: {{\n  \"type\": \"cleanup\",\n  \"content\": {action_json}\n}}\n\n"
+                        
+                await asyncio.sleep(0.1)  # Small delay between events
+                        
+            except Exception as e:
+                error_json = json.dumps(str(e), ensure_ascii=False)
+                yield f"data: {{\n  \"type\": \"error\",\n  \"content\": {error_json}\n}}\n\n"
+                continue
+                
+    except Exception as e:
+        error_json = json.dumps(str(e), ensure_ascii=False)
+        yield f"data: {{\n  \"type\": \"error\",\n  \"content\": {error_json}\n}}\n\n"
+    finally:
+        await asyncio.sleep(0.5)
+        yield f"data: {{\n  \"type\": \"complete\",\n  \"content\": \"Processing completed\"\n}}\n\n"
+        await asyncio.sleep(0.5)
         yield f"data: {{\n  \"type\": \"end\",\n  \"content\": \"Stream completed\"\n}}\n\n"
 
 @app.post("/query")
 async def query_agent(request: QueryRequest):
     if not browser_session["page"]:
-        raise HTTPException(status_code=400, detail="Browser not initialized. Call /setup-browser first")
+        raise HTTPException(
+            status_code=400, 
+            detail="Browser not initialized. Call /setup-browser first"
+        )
+    
+    agent_graphs = {
+        "task": task_agent,
+        "research": research_agent,
+        "deep_research": deep_research_agent
+    }
+    
+    stream_handlers = {
+        "task": stream_task_agent_response,
+        "research": stream_research_agent_response,
+        "deep_research": stream_deep_research_agent_response
+    }
     
     return StreamingResponse(
-        stream_agent_response(request.query, browser_session["page"]),
-        media_type="text/event-stream"
+        stream_handlers[request.agent_type](
+            request.query, 
+            browser_session["page"],
+            agent_graphs[request.agent_type]
+        ),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "Transfer-Encoding": "chunked"
+        }
     )
 
 if __name__ == "__main__":

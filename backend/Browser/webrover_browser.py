@@ -51,9 +51,11 @@ class WebRoverBrowser:
             try:
                 # Connect to the existing Chrome instance
                 ws_endpoint = None
+                print("Getting browser websocket URL")
                 # Get the WebSocket endpoint from Chrome's debugging API
                 async with aiohttp.ClientSession() as session:
                     # Then get the browser websocket URL
+                    print("Getting browser websocket URL")
                     async with session.get("http://127.0.0.1:9222/json/version") as response:
                         data = await response.json()
                         ws_endpoint = data.get('webSocketDebuggerUrl')
@@ -99,7 +101,7 @@ class WebRoverBrowser:
             f"--remote-debugging-port=9222",
             "--no-first-run",
             "--no-default-browser-check",
-            "--start-maximized"
+            "--start-maximized",
         ]
 
         if self.headless:
@@ -113,7 +115,21 @@ class WebRoverBrowser:
                 stderr=asyncio.subprocess.PIPE
             )
             
-            return process
+            print("Waiting for Chrome to start and verify port is listening")
+            # Wait for Chrome to start and verify port is listening
+            for _ in range(10):  # Try for 10 seconds
+                await asyncio.sleep(1)
+                try:
+                    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    result = sock.connect_ex(('127.0.0.1', 9222))
+                    sock.close()
+                    if result == 0:
+                        print("Chrome started successfully with remote debugging port")
+                        return process
+                except:
+                    continue
+            
+            raise RuntimeError("Chrome failed to start with remote debugging port")
             
         except Exception as e:
             print(f"Error launching Chrome: {e}")
@@ -123,7 +139,7 @@ class WebRoverBrowser:
             raise RuntimeError(f"Failed to launch Chrome: {str(e)}")
 
     async def create_context(self, 
-                           viewport: dict = {"width": 1280, "height": 720},
+                           viewport: dict = {"width": 2560, "height": 1440},
                            user_agent: str = None) -> BrowserContext:
         """Create optimized browser context with human-like settings"""
         if not self._browser:
@@ -203,37 +219,3 @@ class WebRoverBrowser:
         if self._playwright:
             await self._playwright.stop()
 
-
-    async def get_chrome_paths():
-        async with async_playwright() as p:
-            # Launch a headless Chrome browser
-            browser = await p.chromium.launch(headless=True)
-            page = await browser.new_page()
-
-            # Navigate to chrome://version/
-            await page.goto('chrome://version/')
-
-            # Wait for the page to load (ensure the content is available)
-            await page.wait_for_selector('body')
-
-            # Extract the Executable Path and Profile Path
-            executable_path = await page.evaluate('''() => {
-                const labels = Array.from(document.querySelectorAll('body > div > div'));
-                const executablePathLabel = labels.find(el => el.textContent.includes('Executable Path'));
-                return executablePathLabel ? executablePathLabel.nextElementSibling.textContent : null;
-            }''')
-
-            profile_path = await page.evaluate('''() => {
-                const labels = Array.from(document.querySelectorAll('body > div > div'));
-                const profilePathLabel = labels.find(el => el.textContent.includes('Profile Path'));
-                return profilePathLabel ? profilePathLabel.nextElementSibling.textContent : null;
-            }''')
-
-            # Print the extracted paths
-            print(f"Executable Path: {executable_path}")
-            print(f"Profile Path: {profile_path}")
-
-            # Close the browser
-            await browser.close()
-
-            return executable_path, profile_path

@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.class
+*.so
+.Python
+env/
+venv/
+.env
+
+# Development
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Project specific
+rag_store_webpage/
+rag_store/
+old_backend/
+
+# Logs
+*.log
