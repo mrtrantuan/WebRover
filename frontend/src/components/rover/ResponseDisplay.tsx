@@ -46,14 +46,26 @@ function useTemporaryMessages(messages: Message[]) {
 }
 
 // Helper function to stringify message content
-function formatMessageContent(content: any): string {
-  if (typeof content === 'string') return content;
-  if (typeof content === 'object') {
-    if (content.thought) return content.thought;
-    return JSON.stringify(content, null, 2);
+const formatMessageContent = (content: any) => {
+  if (Array.isArray(content)) {
+    return content.join('\n');
   }
+  
+  if (typeof content === 'string') {
+    try {
+      // Try to parse as JSON in case it's a stringified array
+      const parsed = JSON.parse(content);
+      if (Array.isArray(parsed)) {
+        return parsed.join('\n');
+      }
+    } catch {
+      // If parsing fails, return as is
+      return content;
+    }
+  }
+  
   return String(content);
-}
+};
 
 interface MarkdownComponentProps {
   children?: ReactNode;

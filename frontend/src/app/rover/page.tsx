@@ -56,11 +56,43 @@ export default function RoverPage() {
 
     const processSSEMessage = (message: string) => {
       try {
-        // Remove 'data: ' prefix and parse the JSON
         const jsonStr = message.replace(/^data: /, '').trim();
         const data = JSON.parse(jsonStr);
         
         if (data.type === 'keepalive') return;
+        
+        // Clean content if it matches the pattern
+        const cleanContent = (content: any) => {
+          // If content is already an array, return it directly
+          if (Array.isArray(content)) {
+            return content;
+          }
+          
+          if (typeof content === 'string') {
+            try {
+              // Try to parse as JSON
+              const parsed = JSON.parse(content);
+              if (Array.isArray(parsed)) {
+                return parsed;
+              }
+              // If it's a string with ["..."] pattern
+              if (content.startsWith('["') && content.endsWith('"]')) {
+                return content.slice(2, -2);
+              }
+            } catch {
+              // If parsing fails and it has the pattern
+              if (content.startsWith('["') && content.endsWith('"]')) {
+                return content.slice(2, -2);
+              }
+            }
+          }
+          return content;
+        };
+
+        const processedData = {
+          type: data.type,
+          content: cleanContent(data.content)
+        };
         
         // Handle different message types based on agent
         switch (data.type) {
@@ -71,7 +103,7 @@ export default function RoverPage() {
           case 'final_response':
           case 'dom_update':
           case 'interaction':
-            setMessages(prev => [...prev, { type: data.type, content: data.content }]);
+            setMessages(prev => [...prev, processedData]);
             break;
           
           // Research specific events
@@ -80,7 +112,7 @@ export default function RoverPage() {
           case 'close_tab':
           case 'cleanup':
             if (isResearchMode) {
-              setMessages(prev => [...prev, { type: data.type, content: data.content }]);
+              setMessages(prev => [...prev, processedData]);
             }
             break;
           
@@ -90,12 +122,12 @@ export default function RoverPage() {
           case 'subtopic_status':
           case 'compile':
             if (isResearchMode && isDeepResearch) {
-              setMessages(prev => [...prev, { type: data.type, content: data.content }]);
+              setMessages(prev => [...prev, processedData]);
             }
             break;
           
           case 'error':
-            setMessages(prev => [...prev, { type: 'error', content: data.content }]);
+            setMessages(prev => [...prev, processedData]);
             break;
         }
       } catch (e) {
