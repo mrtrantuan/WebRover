@@ -23,9 +23,11 @@
   </p>
 </div>
 
-## Overview
+# Overview
+WebRover is an AI-powered web agent that combines autonomous browsing with advanced research capabilities. While maintaining its core ability to automate web tasks, version 2.0 introduces sophisticated research workflows including multi-source analysis, academic paper generation, and deep topic exploration. The system intelligently routes queries between task automation and research modes, providing a versatile tool for both quick actions and comprehensive research.
 
-WebRover is an autonomous AI agent designed to interpret user input and execute actions by interacting with web elements to accomplish tasks or answer questions. It leverages advanced language models and web automation tools to navigate the web, gather information, and provide structured responses based on the user's needs.
+# Motivation
+While traditional web automation tools excel at task execution, and search engines help with information retrieval, there's a growing need for tools that can handle both while specializing in deep research workflows. WebRover bridges this gap by offering task automation alongside intelligent research capabilities, with a particular focus on comprehensive information gathering, analysis, and synthesis. This dual-purpose approach aims to transform how we interact with web content, making both task execution and research more efficient and thorough.
 
 ## Demo Video - Deep Research Agent
 
