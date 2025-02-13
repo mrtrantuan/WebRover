@@ -29,7 +29,7 @@ WebRover is an autonomous AI agent designed to interpret user input and execute 
 
 ## Demo Video - Deep Research Agent
 
-https://github.com/hrithikkoduri/WebRover/issues/14#issue-2849635060
+https://github.com/user-attachments/assets/325c6c55-9384-4939-a912-3b1d13635799
 > Watch as the WebRover Deep Research Agent explores a topic, gathers information, and generates an academic paper.
 
 
