@@ -146,8 +146,8 @@ The system is built on a modern tech stack with three distinct agent types, each
 
 1. Clone the repository
    ```bash
-   git clone https://github.com/hrithikkoduri18/webrover.git
-   cd webrover
+   git clone https://github.com/hrithikkoduri18/WebRover.git
+   cd WebRover
    cd backend
    ```
 
