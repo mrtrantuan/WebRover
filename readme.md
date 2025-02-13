@@ -159,12 +159,7 @@ The system is built on a modern tech stack with three distinct agent types, each
    poetry env use python3.12
    ```
 
-4. Install dependencies using Poetry:
-   ```bash
-   poetry install
-   ```
-
-5. Activate the Poetry shell:
+4. Activate the Poetry shell:
    For Unix/Linux/MacOS:
    ```bash
    poetry shell
@@ -176,6 +171,11 @@ The system is built on a modern tech stack with three distinct agent types, each
    poetry shell
    # or manually
    & (poetry env info --path)\Scripts\activate
+   ```
+
+5. Install dependencies using Poetry:
+   ```bash
+   poetry install
    ```
 
 6. Set up environment variables in `.env`:
@@ -222,6 +222,18 @@ The system is built on a modern tech stack with three distinct agent types, each
    ```
 
 4. Access the frontend at `http://localhost:3000`
+
+For mac users: 
+
+Try running http://localhost:3000 on Safari browser. 
+If you face any with connecting to browser, open terminal and run:
+
+```bash
+pkill -9 "Chrome"
+```
+and try again.
+
+If you still face issues, try changing the websocket port from 9222 to 9223 in the `webrover_browser.py` file in the `backend/Browser` folder.
 
 
 ## Contributing
