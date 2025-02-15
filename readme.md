@@ -34,6 +34,12 @@ While traditional web automation tools excel at task execution, and search engin
 https://github.com/user-attachments/assets/325c6c55-9384-4939-a912-3b1d13635799
 > Watch as the WebRover Deep Research Agent explores a topic, gathers information, and generates an academic paper.
 
+## Demo Video - Task Agent
+
+https://github.com/user-attachments/assets/95ae9afb-3fdf-47f8-857e-f6a1a0d94df5
+> Watch as the WebRover Task Agent navigates a website and performs a task.
+
+
 
 ## Key Features
 
