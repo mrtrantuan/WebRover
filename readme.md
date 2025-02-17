@@ -190,6 +190,7 @@ The system is built on a modern tech stack with three distinct agent types, each
 5. Install dependencies using Poetry:
    ```bash
    poetry install
+   pip install pysqlite3-binary
    ```
 
 6. Set up environment variables in `.env`:
